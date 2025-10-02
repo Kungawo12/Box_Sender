@@ -1,0 +1,48 @@
+
+html,body{height:100%}
+.navbar{
+  background: linear-gradient(180deg, rgba(10,15,30,.95), rgba(10,15,30,.85)) !important;
+  border-bottom: 1px solid rgba(9, 9, 9, 0);
+  backdrop-filter: blur(8px);
+}
+.card{
+
+  color: var(--text);
+}
+.card .form-label{ color: var(--muted); }
+
+.table thead th{
+  color:#c9d3ff;
+  border-bottom-color: rgba(255,255,255,.12);
+  position: sticky; top: 0; background: #0e1833;
+}
+.table td{ border-color: rgba(255,255,255,.08); }
+.badge-logged{
+  color: #a7c7ff;
+  border: 1px solid rgba(106,169,255,.35);
+}
+.badge-picked{
+  color: #b5ffd9;
+  border: 1px solid rgba(43,214,123,.35);
+}
+.btn-brand{
+  background: linear-gradient(135deg, var(--brand), #3b7bf3);
+  border: none;
+}
+.btn-okay{
+  background: linear-gradient(135deg, #2dd6a9, #1cc28f);
+  border: none;
+}
+.kpi .card{
+  text-align:center;
+}
+.kpi .num{ font-weight:800; font-size:1.25rem; }
+.kpi .lbl{ color: var(--muted); font-size:.9rem; }
+footer { color:var(--muted); }
+a, .nav-link{ color:#cfe1ff }
+a:hover{ color:#ffffff }
+.form-control, .form-select{
+  background-color:#0f1730; color:var(--text);
+  border:1px solid rgba(255,255,255,.15);
+}
+.form-control::placeholder{ color:#7c86a9 }
