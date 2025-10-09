@@ -9,13 +9,12 @@
 <link href="assets/styles.css" rel="stylesheet">
 
 </head>
-<body>
+<body class="bg-dark">
   <nav class="navbar navbar-dark">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="dashboard.html">Box Sender</a>
-      <div class="ms-auto d-flex align-items-center gap-2">
-        <a class="btn btn-outline-dark btn-sm" href="search.html">Search</a>
-        <button class="btn btn-outline-dark btn-sm" id="btnSignOut">Sign out</button>
+        <a class="navbar-brand" href="./dashboard.html">Box Sender</a>
+        <a class="btn btn-outline-light btn-sm" href="search.html">Search</a>
+        <button class="btn btn-outline-light btn-sm" id="btnSignOut">Sign out</button>
       </div>
     </div>
   </nav>
@@ -59,21 +58,7 @@
           </form>
         </div>
       </div>
-      <div class="col-lg-7">
-        <div class="card p-3">
-          <h5>Recent Packages</h5>
-          <div class="table-responsive" style="max-height: 520px;">
-            <table class="table table-sm align-middle">
-              <thead>
-                <tr>
-                  <th>Tracking #</th><th>Carrier</th><th>Recipient</th><th>Logged At</th><th>Pickup Code</th><th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      
     </div>
   </main>
 
