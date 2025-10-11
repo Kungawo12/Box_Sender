@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Box Sender • Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  
   <link href="assets/styles.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -18,7 +17,13 @@
         <span class="text-white-50 small">
           Signed in as <strong><span id="userEmail"></span></strong>
         </span>
-        <a class="btn btn-light btn-sm" href="login.html">Sign out</a>
+
+        <!-- Use a POST form for Spring Security logout (needs CSRF token) -->
+        <form method="post" action="/logout" class="m-0">
+          <!-- If using Thymeleaf, Spring adds these model attrs: _csrf.parameterName/_csrf.token -->
+          <!-- <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/> -->
+          <button type="submit" class="btn btn-light btn-sm">Sign out</button>
+        </form>
       </div>
     </div>
   </nav>
@@ -31,9 +36,7 @@
           <div class="card h-100">
             <div class="card-body">
               <h5 class="card-title mb-2">Log Package</h5>
-              <p class="card-text text-secondary">
-                Create a package record with tracking #, carrier, recipient.
-              </p>
+              <p class="card-text text-secondary">Create a package record with tracking #, carrier, recipient.</p>
               <a class="btn btn-primary" href="log.html">Open</a>
             </div>
           </div>
@@ -43,9 +46,7 @@
           <div class="card h-100">
             <div class="card-body">
               <h5 class="card-title mb-2">Pickup Package</h5>
-              <p class="card-text text-secondary">
-                Verify tracking # and pickup code. Record timestamp and names.
-              </p>
+              <p class="card-text text-secondary">Verify tracking # and pickup code. Record timestamp and names.</p>
               <a class="btn btn-success" href="pickup.html">Open</a>
             </div>
           </div>
@@ -55,9 +56,7 @@
           <div class="card h-100">
             <div class="card-body">
               <h5 class="card-title mb-2">Search Packages</h5>
-              <p class="card-text text-secondary">
-                Filter by tracking, recipient, or carrier. See current status.
-              </p>
+              <p class="card-text text-secondary">Filter by tracking, recipient, or carrier. See current status.</p>
               <a class="btn btn-outline-secondary" href="search.html">Open</a>
             </div>
           </div>
@@ -65,7 +64,7 @@
       </div>
     </section>
 
-
+    <!-- Recent Activity -->
     <section>
       <div class="card">
         <div class="card-body">
@@ -78,6 +77,7 @@
 
           <div class="table-responsive mt-3" style="max-height:560px;">
             <table class="table table-sm align-middle">
+              <!-- sticky header using Bootstrap’s sticky-top utility -->
               <thead class="table-light sticky-top">
                 <tr>
                   <th scope="col">When</th>
@@ -87,27 +87,23 @@
                   <th scope="col">Details</th>
                 </tr>
               </thead>
-              <tbody>
-                
+              <tbody id="activityBody">
+            
                 <tr>
-                  <td>Oct 9, 2025, 10:12 AM</td>
-                  <td><span class="badge text-bg-success">Picked Up</span></td>
-                  <td><strong>1Z88A1B2345678901</strong></td>
-                  <td>Micheal Oliver</td>
-                  <td>by Jamie • staff: Alex</td>
+                  <td colspan="5" class="text-center text-secondary small">Loading…</td>
                 </tr>
-                <tr>
-                  <td>Oct 9, 2025, 9:35 AM</td>
-                  <td><span class="badge text-bg-primary">Received</span></td>
-                  <td><strong>94001112025554433221</strong></td>
-                  <td>Bruno Metheow</td>
-                  <td>Carrier: USPS</td>
-                </tr>
-                
               </tbody>
             </table>
           </div>
+
         </div>
       </div>
     </section>
   </main>
+
+  
+  <script src="assets/js/api.js" defer></script>
+  <script src="assets/js/dashboard.js" defer></script>
+
+</body>
+</html>

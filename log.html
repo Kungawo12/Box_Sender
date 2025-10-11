@@ -19,53 +19,55 @@
     </div>
   </nav>
 
-  <main class="container py-4">
-    <div class="row g-3">
-      <div class="col-lg-5">
-        <div class="card p-3">
+  <main class="container">
+
+        <div class="card p-5 m-5">
           <h5>Log Package</h5>
-          <form id="logForm" novalidate>
+          <form id="logForm" >
             <div class="row g-2">
               <div class="col-md-12">
-                <label class="form-label" for="trackingNum">Tracking Number *</label>
-                <input id="trackingNum" class="form-control" required placeholder="e.g., 1Z999AA10123456784">
+                <label class="form-label" for="trackingNumber">Tracking Number *</label>
+                <input name = "trackingNumber" id="trackingNumber" class="form-control" required placeholder="e.g., 1Z999AA10123456784" >
               </div>
               <div class="col-md-6">
                 <label class="form-label" for="carrier">Carrier *</label>
-                <select id="carrier" class="form-select" required>
+                <select id="carrier" name="carrier" class="form-select" required>
                   <option value="">Select carrier…</option>
-                  <option>UPS</option>
-                  <option>USPS</option>
-                  <option>FedEx</option>
-                  <option>DHL</option>
-                  <option>Amazon Logistics</option>
-                  <option>Other</option>
+                  <option value="UPS">UPS</option>
+                  <option value="USPS">USPS</option>
+                  <option value="FedEx">FedEx</option>
+                  <option value="DHL">DHL</option>
+                  <option value="Amazon Logistics">Amazon Logistics</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
-              <div class="col-md-6">
-                <label class="form-label" for="recipientName">Recipient Name *</label>
-                <input id="recipientName" class="form-control" required placeholder="e.g., Alex Johnson">
-              </div>
               <div class="col-md-12">
-                <label class="form-label" for="recipientEmail">Recipient Email</label>
-                <input id="recipientEmail" class="form-control" type="email" placeholder="e.g., alex@company.com">
+                <div class="col-md-6">
+                  <label class="form-label" for="recipientName">Recipient First Name *</label>
+                  <input id="recipientFirstName" name = "recipientFirstName" class="form-control" required placeholder="e.g., Alex " required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="recipientName">Recipient Last Name *</label>
+                  <input id="recipientLastName" name ="recipientLastName" class="form-control" required placeholder="e.g.,  Johnson" required>
+                </div>
+                <label class="form-label" for="recipientEmail">Recipient Email *</label>
+                <input id="recipientEmail" name ="recipientEmail" class="form-control" type="email" placeholder="e.g., alex@company.com" required>
               </div>
             </div>
             <div class="d-flex gap-2 mt-3">
               <button class="btn btn-outline-dark" type="submit">Log Package</button>
-              <button class="btn btn-outline-dark" type="button" id="btnClear">Clear All</button>
+              <button id="btnClear" type="reset" class="btn btn-outline-dark">Clear All</button>
             </div>
           </form>
-        </div>
-      </div>
       
     </div>
   </main>
 
   
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/app.js"></script>
 
-  <script>BS.initLog();</script>
+<script src="assets/js/api.js" defer></script>
+<script src="assets/js/log.js" defer></script>
+
 </body>
 </html>
