@@ -35,7 +35,7 @@ html,body{height:100%}
 }
 
 .page-bg {
-  --bg-url: url("../assets/image/desktop-wallpaper-flowers-box-cardboard-creative-danboard-nature-flowers-cardboard-box.jpg");
+  --bg-url: url("../image/desktop-wallpaper-flowers-box-cardboard-creative-danboard-nature-flowers-cardboard-box.jpg");
   background-image:
     linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)),
     var(--bg-url);
