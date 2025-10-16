@@ -45,6 +45,6 @@ function handleForm(formId, handler) {
     function fmt(iso) {
         if (!iso) return '';
         const d = new Date(iso);
-        return isNaN(d) ? String(iso) : d.toLocaleString();    // human-friendly local time.  [oai_citation:5‡MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API?utm_source=chatgpt.com)
+        return isNaN(d) ? String(iso) : d.toLocaleString();    // human-friendly local time.
     }
 }

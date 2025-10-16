@@ -67,7 +67,6 @@ AuthenticationManager authenticationManager(UserDetailsService uds,
       .logoutUrl("/logout")
       .logoutSuccessUrl("/index.html")
   );
-      // http basic not needed for forms, can be left off, but harmless:
     
 
     return http.build();

@@ -1,6 +1,3 @@
-// assets/js/dashboard.js
-// Loads recent activity rows into <tbody id="activityBody"> on dashboard.html.
-// Requires: assets/js/api.js (provides api() and fmt()).
 
 (function () {
     const tbody = document.getElementById('activityBody');
@@ -17,10 +14,6 @@
     async function loadActivity() {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-secondary small">Loading…</td></tr>';
     try {
-        // Ask Spring Boot for the latest events
-        // Expected JSON like:
-        // [{ whenAt: "2025-10-10T15:12:00Z", action: "RECEIVED"|"PICKED_UP",
-        //    trackingNumber: "1Z...", recipient: "Jamie Rivera", details: "Carrier: UPS" }]
         const events = await api('GET', '/api/activity?limit=100');
 
         if (!events || events.length === 0) {
@@ -60,15 +53,21 @@
         `;
     }
     }
-  
-    // Run once after the HTML is parsed.
-    // Since you include scripts with `defer`, the DOM is parsed before this runs; if not, DOMContentLoaded ensures safety.  [oai_citation:0‡MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Document/DOMContentLoaded_event?utm_source=chatgpt.com)
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch('/api/auth/me', { credentials: 'include' });
+            if (!res.ok) throw new Error('Not signed in');
+                const me = await res.json();
+            document.getElementById('first_name').textContent = me.firstName;
+            } catch {
+                window.location.replace('/index.html');
+        }
+        });
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadActivity);
+        document.addEventListener('DOMContentLoaded', loadActivity);
     } else {
-      loadActivity();
+        loadActivity();
     }
-  
-    // Optional: auto-refresh every 30 seconds so the feed stays current. You can delete this if not needed.  [oai_citation:1‡MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval?utm_source=chatgpt.com)
     setInterval(loadActivity, 30000);
-  })();
+})();
