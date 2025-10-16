@@ -1,6 +1,3 @@
-// assets/js/login.js
-
-// --- helpers ---
 function validateForm(form) {
     if (!form.checkValidity()) {
       form.classList.add('was-validated'); // Bootstrap styling

@@ -1,5 +1,7 @@
 package com.boxsender.auth;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,7 +34,18 @@ public class AuthController {
     this.authManager = authManager;
   }
 
-  // Register -> save user -> immediately log them in -> 200 OK
+  @org.springframework.web.bind.annotation.GetMapping("/me")
+public Map<String, Object> me(Authentication auth) {
+  // auth.getName() is the email of the logged-in user
+  var emp = repo.findByEmail(auth.getName()).orElseThrow();
+  return Map.of(
+      "firstName", emp.getFirstName(),
+      "lastName",  emp.getLastName(),
+      "email",     emp.getEmail()
+  );
+  }
+
+  // Register -> save user -> immediately log them in -
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody RegisterRequest body, HttpServletRequest request) {
     if (repo.findByEmail(body.email()).isPresent()) {
