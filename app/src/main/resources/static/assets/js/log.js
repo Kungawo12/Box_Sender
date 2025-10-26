@@ -1,23 +1,23 @@
 handleForm('logForm', async (fd, form) => {
     const trackingNumber = (fd.get('trackingNumber') || '').toString().trim();
     const carrier        = (fd.get('carrier') || '').toString().trim();
-    const recipientFirst = (fd.get('recipientFirst') || '').toString().trim();
-    const recipientLast  = (fd.get('recipientLast') || '').toString().trim();
+    const recipientFirstName = (fd.get('recipientFirstName') || '').toString().trim();
+    const recipientLastName  = (fd.get('recipientLastName') || '').toString().trim();
     const recipientEmail = (fd.get('recipientEmail') || '').toString().trim();
-    const description    = (fd.get('description') || '').toString().trim(); 
+    const description    = (fd.get('description') || '').toString().trim();
 
-    if (!trackingNumber || trackingNumber.length < 5) 
+    if (!trackingNumber || trackingNumber.length < 5)
     throw new Error('Tracking number looks too short');
-    
-    if (!carrier) 
+
+    if (!carrier)
     throw new Error('Carrier is required');
-    
-    if (!recipientEmail || !recipientFirst || !recipientLast) 
+
+    if (!recipientEmail || !recipientFirstName || !recipientLastName)
     throw new Error('Recipient info is required');
 
     const data = await api('POST', '/api/packages', {
         trackingNumber, carrier, description,
-        recipientEmail, recipientFirst, recipientLast
+        recipientEmail, recipientFirstName, recipientLastName
     });
     
     const box = document.getElementById('logResult');
