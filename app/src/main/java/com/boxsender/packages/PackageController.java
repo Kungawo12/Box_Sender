@@ -54,10 +54,8 @@ public class PackageController {
                     .body(Map.of("error", "Tracking number already exists"));
             }
 
-            // 3. Split full name into first and last
-            String[] names = splitFullName(body.recipientName());
-            String firstName = names[0];
-            String lastName = names[1];
+            String firstName = body.recipientName();
+            String lastName = body.recipientNameecipient.LastName != null ? body.recipient.LastName : ""; // Last name is optional
 
             // 4. Find or create recipient
             Recipient recipient = recipientRepo.findByEmail(body.recipientEmail())
@@ -111,25 +109,6 @@ public class PackageController {
             return ResponseEntity.status(500)
                 .body(Map.of("error", "Failed to log package: " + e.getMessage()));
         }
-    }
-
-    /**
-     * Helper method to split full name into first and last name
-     * Examples:
-     *   "John Smith" → ["John", "Smith"]
-     *   "Jean-Paul Sartre" → ["Jean-Paul", "Sartre"]
-     *   "Madonna" → ["Madonna", ""]
-     */
-    private String[] splitFullName(String fullName) {
-        if (fullName == null || fullName.trim().isEmpty()) {
-            return new String[]{"", ""};
-        }
-
-        String[] parts = fullName.trim().split("\\s+", 2);
-        String firstName = parts[0];
-        String lastName = parts.length > 1 ? parts[1] : "";
-
-        return new String[]{firstName, lastName};
     }
 
     /**
