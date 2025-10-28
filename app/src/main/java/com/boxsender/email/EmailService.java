@@ -20,16 +20,19 @@ public class EmailService {
      * Send HTML email notification to recipient about their package
      */
     public void sendPackageNotification(String recipientEmail, String recipientName,
-                                       String trackingNumber, String pickupCode) {
+                                       String trackingNumber) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
+            // ✅ ADD THIS LINE - Critical for Mailtrap!
+            helper.setFrom("mailroom@boxsender.com", "Box Sender Mailroom");
+            
             helper.setTo(recipientEmail);
             helper.setSubject("📦 Your Package Has Arrived!");
             
-            String htmlContent = buildEmailTemplate(recipientName, trackingNumber, pickupCode);
-            helper.setText(htmlContent, true);  // true = HTML content
+            String htmlContent = buildEmailTemplate(recipientName, trackingNumber);
+            helper.setText(htmlContent, true);
 
             mailSender.send(message);
             System.out.println("✅ Email sent to " + recipientEmail);
@@ -37,20 +40,18 @@ public class EmailService {
         } catch (MessagingException e) {
             System.err.println("❌ Failed to send email to " + recipientEmail + ": " + e.getMessage());
             // Don't throw exception - graceful failure
-            // Package was already saved, don't break the flow due to email failure
+        } catch (Exception e) {
+            System.err.println("❌ Email error: " + e.getMessage());
         }
     }
 
     /**
      * Build HTML email template
      */
-    private String buildEmailTemplate(String name, String tracking, String code) {
-        // Escape the variables for security
+    private String buildEmailTemplate(String name, String tracking) {
         String escapedName = escapeHtml(name);
         String escapedTracking = escapeHtml(tracking);
-        String escapedCode = escapeHtml(code);
         
-        // Build HTML string without mixing """ with +
         return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
@@ -89,40 +90,17 @@ public class EmailService {
                 "            color: #333;\n" +
                 "            margin-bottom: 20px;\n" +
                 "        }\n" +
-                "        .info-section {\n" +
-                "            background: #f9fafb;\n" +
-                "            border-left: 4px solid #007bff;\n" +
-                "            padding: 15px;\n" +
-                "            margin: 20px 0;\n" +
-                "            border-radius: 4px;\n" +
-                "        }\n" +
-                "        .info-section h3 {\n" +
-                "            margin-top: 0;\n" +
-                "            color: #0a0f1e;\n" +
-                "            font-size: 14px;\n" +
-                "            text-transform: uppercase;\n" +
-                "            letter-spacing: 0.5px;\n" +
-                "        }\n" +
-                "        .info-item {\n" +
-                "            margin: 10px 0;\n" +
-                "            font-size: 14px;\n" +
-                "            color: #555;\n" +
-                "        }\n" +
-                "        .info-label {\n" +
-                "            font-weight: bold;\n" +
-                "            color: #0a0f1e;\n" +
-                "        }\n" +
-                "        .code-box { \n" +
+                "        .tracking-box { \n" +
                 "            background: linear-gradient(135deg, #007bff, #0056b3);\n" +
                 "            border: 2px solid #0056b3;\n" +
                 "            padding: 20px;\n" +
                 "            text-align: center;\n" +
-                "            font-size: 32px;\n" +
+                "            font-size: 24px;\n" +
                 "            font-weight: bold;\n" +
                 "            color: white;\n" +
                 "            margin: 25px 0;\n" +
                 "            border-radius: 8px;\n" +
-                "            letter-spacing: 2px;\n" +
+                "            letter-spacing: 1px;\n" +
                 "            font-family: 'Courier New', monospace;\n" +
                 "        }\n" +
                 "        .instructions {\n" +
@@ -168,24 +146,17 @@ public class EmailService {
                 "                Your package has been received at our mailroom and is ready for pickup!\n" +
                 "            </p>\n" +
                 "            \n" +
-                "            <div class=\"info-section\">\n" +
-                "                <h3>📋 Pickup Details</h3>\n" +
-                "                <div class=\"info-item\">\n" +
-                "                    <span class=\"info-label\">Tracking Number:</span> " + escapedTracking + "\n" +
-                "                </div>\n" +
-                "            </div>\n" +
-                "            \n" +
                 "            <p style=\"color: #666; font-size: 14px; margin: 20px 0;\">\n" +
-                "                <strong>Your Pickup Code:</strong>\n" +
+                "                <strong>Your Tracking Number:</strong>\n" +
                 "            </p>\n" +
                 "            \n" +
-                "            <div class=\"code-box\">" + escapedCode + "</div>\n" +
+                "            <div class=\"tracking-box\">" + escapedTracking + "</div>\n" +
                 "            \n" +
                 "            <div class=\"instructions\">\n" +
                 "                <h3 style=\"margin-top: 0; color: #0a0f1e; font-size: 14px;\">How to Pick Up:</h3>\n" +
                 "                <ol>\n" +
                 "                    <li>Go to the mailroom reception</li>\n" +
-                "                    <li>Show them or tell them this pickup code</li>\n" +
+                "                    <li>Show them or tell them your tracking number</li>\n" +
                 "                    <li>They'll verify and hand over your package</li>\n" +
                 "                </ol>\n" +
                 "            </div>\n" +
@@ -205,9 +176,6 @@ public class EmailService {
                 "</html>";
     }
 
-    /**
-     * Escape HTML special characters for security
-     */
     private String escapeHtml(String text) {
         if (text == null) return "";
         return text
