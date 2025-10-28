@@ -30,11 +30,8 @@ public class Package {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 12)
-    private String status; // e.g., "logged", "picked"
-
-    @Column(name = "pickup_code", length = 12)
-    private String pickupCode;
+    @Column(length = 20)
+    private String status; // "received" or "picked"
 
     @ManyToOne
     @JoinColumn(name = "recipient_id", nullable = false, foreignKey = @ForeignKey(name = "fk_packages_recipients"))
@@ -60,14 +57,8 @@ public class Package {
         this.description = description;
         this.recipient = recipient;
         this.employee = employee;
-        this.status = "logged";
-        this.pickupCode = generatePickupCode();
+        this.status = "received";  // Default status when package arrives
         this.createdAt = java.time.LocalDateTime.now();
-    }
-
-    // Helper method to generate a random pickup code
-    private String generatePickupCode() {
-        return String.format("%06d", (int)(Math.random() * 1000000));
     }
 
     // --- Getters & Setters ---
@@ -104,13 +95,6 @@ public class Package {
     }
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getPickupCode() {
-        return pickupCode;
-    }
-    public void setPickupCode(String pickupCode) {
-        this.pickupCode = pickupCode;
     }
 
     public Recipient getRecipient() {
