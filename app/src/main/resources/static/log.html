@@ -9,65 +9,72 @@
 <link href="/assets/Css/style.css" rel="stylesheet">
 
 </head>
-<body class="bg-dark">
-  <nav class="navbar navbar-dark">
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="/dashboard.html">Box Sender</a>
-        <a class="btn btn-outline-light btn-sm" href="/search.html">Search</a>
-        <form method="post" action="/logout" class="m-0">
-          <button type="submit" class="btn btn-light btn-sm">Sign out</button>
-        </form>
-      </div>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-light btn-sm" href="/search.html">Search</a>
+          <form method="post" action="/logout" class="m-0">
+            <button type="submit" class="btn btn-light btn-sm">Sign out</button>
+          </form>
+        </div>
     </div>
   </nav>
 
-  <main class="container">
-
-        <div class="card p-5 m-5">
-          <h5>Log Package</h5>
-          <form id="logForm" >
-            <div class="row g-2">
-              <div class="col-md-12">
-                <label class="form-label" for="trackingNumber">Tracking Number *</label>
-                <input name = "trackingNumber" id="trackingNumber" class="form-control" required placeholder="e.g., 1Z999AA10123456784" >
-              </div>
-              <div class="col-md-6">
-                <label class="form-label" for="carrier">Carrier *</label>
-                <select id="carrier" name="carrier" class="form-select" required>
-                  <option value="">Select carrier…</option>
-                  <option value="UPS">UPS</option>
-                  <option value="USPS">USPS</option>
-                  <option value="FedEx">FedEx</option>
-                  <option value="DHL">DHL</option>
-                  <option value="Amazon Logistics">Amazon Logistics</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="col-md-12">
-                <div class="col-md-6">
-                  <label class="form-label" for="recipientFirstName">Recipient First Name *</label>
-                  <input id="recipientFirstName" name = "recipientFirstName" class="form-control" required placeholder="e.g., Alex " required>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label" for="recipientLastName">Recipient Last Name *</label>
-                  <input id="recipientLastName" name ="recipientLastName" class="form-control" required placeholder="e.g.,  Johnson" required>
-                </div>
-                <label class="form-label" for="recipientEmail">Recipient Email *</label>
-                <input id="recipientEmail" name ="recipientEmail" class="form-control" type="email" placeholder="e.g., alex@company.com" required>
-                </div>
-                <div class="col-md-12">
-                  <label class="form-label" for="description">Description</label>
-                  <textarea id="description" name="description" class="form-control" placeholder="e.g., Package from supplier"></textarea>
-                </div>
-  
+  <main class="container mt-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h4 class="card-title mb-4">Log Package</h4>
+        <form id="logForm">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label" for="trackingNumber">Tracking Number *</label>
+              <input name="trackingNumber" id="trackingNumber" class="form-control" required placeholder="e.g., 1Z999AA10123456784">
             </div>
-            <div class="d-flex gap-2 mt-3">
-              <button class="btn btn-outline-dark" type="submit">Log Package</button>
-              <button id="btnClear" type="reset" class="btn btn-outline-dark">Clear All</button>
+            
+            <div class="col-md-6" bg-light>
+              <label class="form-label" for="carrier">Carrier *</label>
+              <select id="carrier" name="carrier" class="form-select" required>
+                <option value="">Select carrier…</option>
+                <option value="UPS">UPS</option>
+                <option value="USPS">USPS</option>
+                <option value="FedEx">FedEx</option>
+                <option value="DHL">DHL</option>
+                <option value="Amazon Logistics">Amazon Logistics</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
-          </form>
-      
-          <div id="logResult"></div>
+            
+            <div class="col-md-6">
+              <label class="form-label" for="recipientFirstName">Recipient First Name *</label>
+              <input id="recipientFirstName" name="recipientFirstName" class="form-control" required placeholder="e.g., Alex">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label" for="recipientLastName">Recipient Last Name</label>
+              <input id="recipientLastName" name="recipientLastName" class="form-control" placeholder="e.g., Johnson">
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label" for="recipientEmail">Recipient Email *</label>
+              <input id="recipientEmail" name="recipientEmail" class="form-control" type="email" placeholder="e.g., alex@company.com" required>
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label" for="description">Description (Optional)</label>
+              <textarea id="description" name="description" class="form-control" rows="3" placeholder="e.g., Package from supplier"></textarea>
+            </div>
+          </div>
+          
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" type="submit">Log Package</button>
+            <button id="btnClear" type="reset" class="btn btn-outline-secondary">Clear All</button>
+          </div>
+        </form>
+    
+        <div id="logResult" class="mt-3"></div>
+      </div>
     </div>
   </main>
 
