@@ -30,6 +30,37 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
 - Nick Herberg
 - Brian Willems
 
+---
+
+## 🆕 What's New in Version 2.0
+
+### 🔐 Automated Pickup Code System
+- **6-character verification codes** automatically generated for each package
+- Secure pickup process requiring code validation
+- Codes sent via email in large, easy-to-read format
+- Prevents unauthorized package pickup
+- Cryptographically secure random generation
+
+### 🔍 Enhanced Package Search
+- **Multi-field search**: tracking number, carrier, description, recipient name/email
+- **Dynamic sorting** by any column (ascending/descending)
+- Apply button for controlled searches
+- Real-time result count
+- Improved UI with better feedback
+
+### ✉️ Email Confirmation
+- Employee sees immediate confirmation after logging packages
+- **Pickup code displayed** prominently to employee
+- Email delivery status indicator (✉️ success / ⚠️ failed)
+- Warning if email fails so employee can manually inform recipient
+
+### 📊 Database Improvements
+- Added `pickup_code` column with index for fast lookups
+- Dummy data script with 45 test packages for demonstrations
+- Database migration scripts for easy upgrades
+
+---
+
 ## Features
 
 ### ✅ Core Functionality (All 7 Use Cases Implemented)
@@ -41,14 +72,18 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
 
 2. **UC-02: Package Logging**
    - Quick entry of package details with tracking numbers
+   - **Automatic 6-character pickup code generation** 🔐
    - Automatic recipient creation or lookup
-   - Real-time email notifications to recipients
+   - Real-time email notifications with pickup code
+   - Success confirmation showing code and email status
    - Duplicate tracking number prevention
 
-3. **UC-03: Package Pickup** ✨ *New*
-   - Mark packages as picked up
+3. **UC-03: Package Pickup** ✨ *Enhanced*
+   - **Secure pickup code verification** 🔐
+   - Mark packages as picked up only with valid code
    - Signature/verification capture
    - Automatic timestamp recording
+   - Staff notes for audit trail
    - Status change from "received" to "picked"
 
 4. **UC-04: Recipient Management** ✨ *New*
@@ -57,11 +92,14 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
    - Update recipient information
    - Department assignment
 
-5. **UC-05: Package Search** ✨ *New*
-   - Search by tracking number (partial match supported)
-   - Search by recipient email (partial match supported)
+5. **UC-05: Package Search** ✨ *Enhanced*
+   - **Multi-field comprehensive search**
+   - Search by: tracking number, carrier, description, recipient name/email
+   - **Dynamic sorting** by any column (ascending/descending)
    - Filter by status (received/picked)
-   - Real-time search with debouncing
+   - Apply button for controlled searches
+   - Real-time result count
+   - Relative timestamps ("2 hours ago")
 
 6. **UC-06: Generate Reports** ✨ *New*
    - Daily package logs
@@ -105,9 +143,10 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
 - **JavaScript (ES6+)** - Client-side logic with async/await
 - **Fetch API** - RESTful API consumption
 
-### Email
+### Email & Security
 - **JavaMailSender** - Spring email abstraction
 - **Brevo (SMTP)** - Email service provider (300 emails/day free tier)
+- **SecureRandom** - Cryptographically secure pickup code generation
 
 ## Architecture
 
@@ -234,20 +273,40 @@ source boxsender_complete.sql;
 
 **This includes:**
 - All 6 required tables (employees, packages, recipients, reports, activity_log, notifications)
+- **Pickup code column** for secure package verification 🔐
 - ENUM validation for package status
 - UNIQUE indexes on tracking numbers and emails
-- Performance indexes for fast searches
+- Performance indexes for fast searches (including pickup codes)
 - Composite indexes for dashboard queries
 - Foreign key constraints with proper cascading
 
 ### Option 2: Manual Table Creation
 
-If you prefer to create tables manually or already have an existing database, use the migration script:
+If you prefer to create tables manually or already have an existing database, use the migration scripts:
 
 ```bash
 # Apply improvements to existing database
 mysql -u root -p boxsender < database_improvements.sql
+
+# Add pickup code feature (required for version 2.0+)
+mysql -u root -p boxsender < add_pickup_code.sql
 ```
+
+### Option 3: Add Dummy Test Data
+
+To populate your database with realistic test data for demonstration:
+
+```bash
+# Import 45 packages, 20 recipients, 5 employees, and sample reports
+mysql -u root -p boxsender < dummy_data.sql
+```
+
+**Test employee credentials (all have password: "password123"):**
+- sarah.johnson@metrostate.edu
+- michael.chen@metrostate.edu
+- emily.rodriguez@metrostate.edu
+- james.williams@metrostate.edu
+- lisa.anderson@metrostate.edu
 
 ### Database Schema Highlights
 
@@ -535,10 +594,10 @@ POST /api/auth/logout
 
 | Method | Endpoint | Description | Auth | Request Body |
 |--------|----------|-------------|------|--------------|
-| POST | `/api/packages` | Log new package | Yes | `{trackingNumber, carrier, description, recipientFirst, recipientLast, recipientEmail}` |
+| POST | `/api/packages` | Log new package (auto-generates pickup code) 🔐 | Yes | `{trackingNumber, carrier, description, recipientFirst, recipientLast, recipientEmail}` |
 | GET | `/api/packages` | Get all packages | Yes | - |
-| GET | `/api/packages/search` | Search packages | Yes | Query params: `trackingNumber`, `recipientEmail`, `status` |
-| PUT | `/api/packages/{id}/pickup` | Mark as picked up | Yes | `{signature, notes}` |
+| GET | `/api/packages/search` | Advanced search with sorting | Yes | Query params: `trackingNumber`, `carrier`, `description`, `recipientFirstName`, `recipientLastName`, `recipientEmail`, `status`, `sortBy`, `sortOrder` |
+| PUT | `/api/packages/{id}/pickup` | Mark as picked up (requires valid pickup code) 🔐 | Yes | `{signature, notes, pickupCode}` |
 
 #### Recipients
 
@@ -571,7 +630,7 @@ POST /api/auth/logout
 
 ### Example Requests
 
-**Log a Package:**
+**Log a Package (Returns pickup code):**
 ```bash
 curl -X POST http://localhost:8080/api/packages \
   -H "Content-Type: application/json" \
@@ -584,23 +643,47 @@ curl -X POST http://localhost:8080/api/packages \
     "recipientLast": "Smith",
     "recipientEmail": "jane.smith@example.com"
   }'
+
+# Response includes:
+# {
+#   "id": 123,
+#   "trackingNumber": "1Z999AA10123456784",
+#   "status": "received",
+#   "pickupCode": "A7K2M9",
+#   "recipientEmail": "jane.smith@example.com",
+#   "emailSent": true,
+#   "message": "Package logged successfully! Pickup code email sent to jane.smith@example.com"
+# }
 ```
 
-**Search Packages:**
+**Search Packages (Advanced with sorting):**
 ```bash
+# Search by carrier and sort by date
+curl -X GET "http://localhost:8080/api/packages/search?carrier=UPS&sortBy=createdAt&sortOrder=desc" \
+  -b cookies.txt
+
+# Search by recipient name
+curl -X GET "http://localhost:8080/api/packages/search?recipientFirstName=Jane&sortBy=trackingNumber&sortOrder=asc" \
+  -b cookies.txt
+
+# Filter by status
 curl -X GET "http://localhost:8080/api/packages/search?status=received" \
   -b cookies.txt
 ```
 
-**Mark Package as Picked Up:**
+**Mark Package as Picked Up (Requires pickup code):**
 ```bash
 curl -X PUT http://localhost:8080/api/packages/1/pickup \
   -H "Content-Type: application/json" \
   -b cookies.txt \
   -d '{
     "signature": "John Doe",
-    "notes": "Photo ID verified"
+    "notes": "Photo ID verified",
+    "pickupCode": "A7K2M9"
   }'
+
+# Error response if code is wrong:
+# {"error": "Invalid pickup code. Please check the code sent to the recipient."}
 ```
 
 **Generate Daily Report:**
@@ -648,6 +731,7 @@ CREATE TABLE packages (
   carrier VARCHAR(45) NOT NULL,
   description TEXT,
   status ENUM('received', 'picked') DEFAULT 'received' NOT NULL,
+  pickup_code VARCHAR(10),  -- 🔐 6-character verification code (e.g., "A7K2M9")
   recipient_id INT NOT NULL,
   employee_id INT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -655,6 +739,7 @@ CREATE TABLE packages (
   FOREIGN KEY (recipient_id) REFERENCES recipients(id),
   FOREIGN KEY (employee_id) REFERENCES employees(id),
   INDEX idx_status (status),
+  INDEX idx_pickup_code (pickup_code),  -- 🔐 Fast code lookup
   INDEX idx_created_at (created_at),
   INDEX idx_updated_at (updated_at),
   INDEX idx_status_created (status, created_at)
@@ -769,6 +854,34 @@ The database includes **10+ indexes** for optimal query performance:
 - `/api/recipients/**` - Recipient management
 - `/api/reports/**` - Report generation
 - `/api/dashboard/**` - Dashboard statistics
+
+### 🔐 Pickup Code Security (New Feature)
+
+**File:** [PackageController.java](app/src/main/java/com/boxsender/packages/PackageController.java:327-334)
+
+1. **Code Generation**
+   - Cryptographically secure random generation using `SecureRandom`
+   - 6-character alphanumeric codes (e.g., "A7K2M9")
+   - Excludes confusing characters (0, O, I, 1) for clarity
+   - Character set: `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`
+
+2. **Verification Process**
+   - Code required during package pickup
+   - Case-insensitive validation
+   - Prevents unauthorized package collection
+   - Ensures only recipient or authorized person can pick up
+
+3. **Email Delivery**
+   - Code sent automatically in notification email
+   - Displayed prominently in large green box
+   - Warning message emphasizes importance
+   - Employee notified if email delivery fails
+
+4. **Security Benefits**
+   - **Identity Verification:** Confirms recipient has email access
+   - **Unauthorized Access Prevention:** Wrong code rejects pickup
+   - **Audit Trail:** Pickup attempts tracked with codes
+   - **Simple UX:** Easy to remember, show on phone, or write down
 
 ### XSS Protection
 
