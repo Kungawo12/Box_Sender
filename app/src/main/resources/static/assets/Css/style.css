@@ -1,3 +1,8 @@
+:root {
+  --text: #e8ecf5;
+  --muted: #8b95b8;
+  --brand: #5c8cff;
+}
 
 html,body{height:100%}
 .navbar{
@@ -6,8 +11,12 @@ html,body{height:100%}
   backdrop-filter: blur(8px);
 }
 .card{
-
   color: var(--text);
+}
+
+/* Override card text color for light backgrounds */
+.bg-light .card{
+  color: #212529;
 }
 .card .form-label{ color: var(--muted); }
 
