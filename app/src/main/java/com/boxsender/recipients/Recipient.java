@@ -80,6 +80,7 @@ public class Recipient {
         this.email = email;
         this.department = department;
         this.createdAt = java.time.LocalDateTime.now();
+        this.updatedAt = java.time.LocalDateTime.now();
     }
 
     // --- Getter and Setter Methods ---

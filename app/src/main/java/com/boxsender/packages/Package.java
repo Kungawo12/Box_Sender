@@ -65,6 +65,12 @@ public class Package {
     @Column(length = 20)
     private String status;
 
+    // Auto-generated pickup verification code
+    // A 6-character alphanumeric code sent to the recipient for secure package pickup
+    // Example: "A7K2M9"
+    @Column(name = "pickup_code", length = 10)
+    private String pickupCode;
+
     // The person who will receive this package
     // ManyToOne relationship: many packages can belong to one recipient
     // Foreign key relationship with recipients table
@@ -115,6 +121,7 @@ public class Package {
         this.employee = employee;
         this.status = "received";  // Default status when package arrives
         this.createdAt = java.time.LocalDateTime.now();
+        this.updatedAt = java.time.LocalDateTime.now();
     }
 
     // --- Getter and Setter Methods ---
@@ -198,6 +205,22 @@ public class Package {
      */
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    /**
+     * Gets the pickup verification code
+     * @return the 6-character pickup code
+     */
+    public String getPickupCode() {
+        return pickupCode;
+    }
+
+    /**
+     * Sets the pickup verification code
+     * @param pickupCode the pickup code to set
+     */
+    public void setPickupCode(String pickupCode) {
+        this.pickupCode = pickupCode;
     }
 
     /**

@@ -1,9 +1,12 @@
 package com.boxsender.packages;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Package Repository Interface
@@ -77,4 +80,97 @@ public interface PackageRepository extends JpaRepository<Package, Long> {
      * @return List of all packages logged by that employee (empty list if none found)
      */
     List<Package> findByEmployeeId(Long employeeId);
+
+    /**
+     * Finds packages by tracking number (partial match)
+     * Useful for search functionality where users may not know the full tracking number
+     *
+     * Spring generates: SELECT * FROM packages WHERE tracking_number LIKE %?%
+     *
+     * @param trackingNumber partial or full tracking number to search for
+     * @return List of packages matching the tracking number pattern
+     */
+    List<Package> findByTrackingNumberContaining(String trackingNumber);
+
+    /**
+     * Finds packages by recipient email (partial match)
+     * Useful for searching all packages for a recipient by email
+     *
+     * Spring generates: SELECT p FROM Package p WHERE p.recipient.email LIKE %?%
+     *
+     * @param email partial or full recipient email to search for
+     * @return List of packages for recipients matching the email pattern
+     */
+    List<Package> findByRecipientEmailContaining(String email);
+
+    /**
+     * Count packages by status
+     * Useful for dashboard statistics (e.g., how many packages are waiting to be picked up)
+     *
+     * Spring generates: SELECT COUNT(*) FROM packages WHERE status = ?
+     *
+     * @param status the status to count ("received" or "picked")
+     * @return Number of packages with that status
+     */
+    long countByStatus(String status);
+
+    /**
+     * Comprehensive search method supporting multiple criteria
+     * Uses JPQL (Java Persistence Query Language) for flexible searching
+     *
+     * This method allows searching by:
+     * - Tracking number (partial match)
+     * - Carrier (partial match)
+     * - Package description (partial match)
+     * - Recipient first name (partial match)
+     * - Recipient last name (partial match)
+     * - Recipient email (partial match)
+     * - Status (exact match)
+     *
+     * All text searches are case-insensitive
+     *
+     * @param trackingNumber partial tracking number to search for
+     * @param carrier partial carrier name to search for
+     * @param description partial description to search for
+     * @param recipientFirstName partial recipient first name to search for
+     * @param recipientLastName partial recipient last name to search for
+     * @param recipientEmail partial recipient email to search for
+     * @param status exact status to filter by
+     * @param sort sorting specification (e.g., Sort.by("createdAt").descending())
+     * @return List of packages matching the criteria, sorted as specified
+     */
+    @Query("SELECT p FROM Package p " +
+           "WHERE (:trackingNumber IS NULL OR LOWER(p.trackingNumber) LIKE LOWER(CONCAT('%', :trackingNumber, '%'))) " +
+           "AND (:carrier IS NULL OR LOWER(p.carrier) LIKE LOWER(CONCAT('%', :carrier, '%'))) " +
+           "AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%'))) " +
+           "AND (:recipientFirstName IS NULL OR LOWER(p.recipient.firstName) LIKE LOWER(CONCAT('%', :recipientFirstName, '%'))) " +
+           "AND (:recipientLastName IS NULL OR LOWER(p.recipient.lastName) LIKE LOWER(CONCAT('%', :recipientLastName, '%'))) " +
+           "AND (:recipientEmail IS NULL OR LOWER(p.recipient.email) LIKE LOWER(CONCAT('%', :recipientEmail, '%'))) " +
+           "AND (:status IS NULL OR p.status = :status)")
+    List<Package> searchPackages(
+        String trackingNumber,
+        String carrier,
+        String description,
+        String recipientFirstName,
+        String recipientLastName,
+        String recipientEmail,
+        String status,
+        Sort sort
+    );
+
+    /**
+     * Find all packages with custom sorting
+     *
+     * This overloaded version of findAll accepts a Sort parameter
+     * Inherited from JpaRepository but documented here for clarity
+     *
+     * Common sorting examples:
+     * - Sort.by("createdAt").descending() - Newest first
+     * - Sort.by("trackingNumber").ascending() - Alphabetical by tracking number
+     * - Sort.by("status", "createdAt") - By status, then by date
+     *
+     * @param sort the sorting specification
+     * @return List of all packages sorted as specified
+     */
+    List<Package> findAll(Sort sort);
 }

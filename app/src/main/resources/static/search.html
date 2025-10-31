@@ -22,28 +22,81 @@
 
   <main class="container container-narrow py-4">
     <div class="card p-3">
-      <h5 class="mb-2">Search Packages</h5>
-      <div class="row g-2">
-        <div class="col-md-8">
-          <label class="form-label" for="q">Query</label>
-          <input id="q" class="form-control" placeholder="tracking / recipient / carrier" />
+      <h5 class="mb-3">Search Packages</h5>
+
+      <!-- Search Filters -->
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" for="trackingNumber">Tracking Number</label>
+          <input id="trackingNumber" class="form-control" placeholder="Search by tracking number..." />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="carrier">Carrier</label>
+          <input id="carrier" class="form-control" placeholder="UPS, FedEx, USPS, DHL..." />
+        </div>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" for="recipientName">Recipient Name</label>
+          <input id="recipientName" class="form-control" placeholder="First or last name..." />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="recipientEmail">Recipient Email</label>
+          <input id="recipientEmail" class="form-control" placeholder="Search by email..." />
+        </div>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-4">
+          <label class="form-label" for="description">Description</label>
+          <input id="description" class="form-control" placeholder="Package description..." />
         </div>
         <div class="col-md-4">
           <label class="form-label" for="status">Status</label>
           <select id="status" class="form-select">
-            <option value="all">All</option>
-            <option value="logged">Logged</option>
-            <option value="picked">Picked</option>
+            <option value="">All Statuses</option>
+            <option value="received">Waiting for Pickup</option>
+            <option value="picked">Picked Up</option>
           </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="sortBy">Sort By</label>
+          <div class="input-group">
+            <select id="sortBy" class="form-select">
+              <option value="createdAt">Date Logged</option>
+              <option value="trackingNumber">Tracking Number</option>
+              <option value="carrier">Carrier</option>
+              <option value="status">Status</option>
+              <option value="updatedAt">Last Updated</option>
+            </select>
+            <button id="sortOrderBtn" class="btn btn-outline-secondary" type="button" title="Toggle sort order">
+              <span id="sortOrderIcon">↓</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="table-responsive mt-3" style="max-height:560px;">
-        <table class="table table-sm">
-          <thead>
+      <div class="d-flex gap-2 mb-3">
+        <button id="applyBtn" class="btn btn-primary">Apply Filters</button>
+        <button id="clearBtn" class="btn btn-secondary">Clear Filters</button>
+        <div class="ms-auto">
+          <small class="text-muted">Found: <span id="resultCount">0</span> packages</small>
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="table-responsive" style="max-height:500px; overflow-y: auto;">
+        <table class="table table-sm table-hover">
+          <thead class="sticky-top bg-white">
             <tr>
-              <th>Tracking #</th><th>Carrier</th><th>Recipient</th>
-              <th>Logged At</th><th>Code</th><th>Status</th><th>Pickup At</th>
+              <th>Tracking #</th>
+              <th>Carrier</th>
+              <th>Description</th>
+              <th>Recipient</th>
+              <th>Status</th>
+              <th>Logged At</th>
+              <th>Pickup At</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -51,5 +104,7 @@
       </div>
     </div>
   </main>
+
+  <script src="/assets/js/search.js"></script>
 </body>
 </html>
