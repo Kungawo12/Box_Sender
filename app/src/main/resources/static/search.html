@@ -22,7 +22,7 @@
 
   <main class="container container-narrow py-4">
     <div class="card p-3">
-      <h5 class="mb-3">Search Packages</h5>
+      <h5 class="mb-3 text-dark">Search Packages</h5>
 
       <!-- Search Filters -->
       <div class="row g-2 mb-3">
@@ -77,9 +77,11 @@
         </div>
       </div>
 
-      <div class="d-flex gap-2 mb-3">
+      <div class="d-flex gap-2 mb-3 flex-wrap">
         <button id="applyBtn" class="btn btn-primary">Apply Filters</button>
         <button id="clearBtn" class="btn btn-secondary">Clear Filters</button>
+        <button onclick="exportToCSV()" class="btn btn-success">Export CSV</button>
+        <button onclick="exportToPDF()" class="btn btn-info">Export PDF</button>
         <div class="ms-auto">
           <small class="text-muted">Found: <span id="resultCount">0</span> packages</small>
         </div>

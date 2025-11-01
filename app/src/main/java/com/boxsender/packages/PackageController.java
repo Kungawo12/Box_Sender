@@ -1,10 +1,10 @@
 package com.boxsender.packages;
 
-import java.security.SecureRandom;
 import java.util.Map;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -89,7 +89,8 @@ public class PackageController {
      * Log a new package when it arrives
      *
      * HTTP Endpoint: POST /api/packages
-     * Authentication: Required (employee must be logged in)
+     * Authentication: Required (ADMIN or MAILROOM_STAFF role only)
+     * Authorization: Only ADMIN and MAILROOM_STAFF can log packages
      *
      * This method handles the entire package logging workflow:
      * 1. Validates the logged-in employee exists
@@ -98,14 +99,21 @@ public class PackageController {
      * 4. Saves the package to the database
      * 5. Sends email notification to the recipient
      *
+     * Role-Based Access Control:
+     * - ADMIN: Full access (can log packages)
+     * - MAILROOM_STAFF: Full access (can log packages)
+     * - EMPLOYEE: No access (403 Forbidden)
+     *
      * @param body the request body containing package details (validated)
      * @param auth the authentication object containing logged-in employee's email
      * @return ResponseEntity with success or error response
      *         - 200 OK: Package logged successfully with package details
      *         - 400 Bad Request: Tracking number already exists
+     *         - 403 Forbidden: User doesn't have ADMIN or MAILROOM_STAFF role
      *         - 500 Internal Server Error: Unexpected error occurred
      */
     @PostMapping  // Maps to POST requests at /api/packages
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAILROOM_STAFF')")  // Only ADMIN and MAILROOM_STAFF can log packages
     public ResponseEntity<?> logPackage(@Valid @RequestBody LogPackageRequest body,
                                         Authentication auth) {
         try {
@@ -280,6 +288,7 @@ public class PackageController {
      *
      * Query parameters (all optional):
      * - trackingNumber: Search by tracking number (partial, case-insensitive match)
+     * - pickupCode: Search by pickup code (exact, case-insensitive match) 🔐
      * - carrier: Search by carrier name (partial, case-insensitive match)
      * - description: Search by package description (partial, case-insensitive match)
      * - recipientFirstName: Search by recipient first name (partial, case-insensitive match)
@@ -291,11 +300,13 @@ public class PackageController {
      *
      * Examples:
      * - GET /api/packages/search?trackingNumber=1Z999
+     * - GET /api/packages/search?pickupCode=A7K2M9
      * - GET /api/packages/search?status=received&sortBy=createdAt&sortOrder=desc
      * - GET /api/packages/search?carrier=UPS&recipientEmail=john
      * - GET /api/packages/search?sortBy=trackingNumber&sortOrder=asc
      *
      * @param trackingNumber optional tracking number to search for
+     * @param pickupCode optional pickup code to search for (6-character verification code)
      * @param carrier optional carrier name to search for
      * @param description optional package description to search for
      * @param recipientFirstName optional recipient first name to search for
@@ -310,6 +321,7 @@ public class PackageController {
     @GetMapping("/search")
     public ResponseEntity<?> searchPackages(
         @RequestParam(required = false) String trackingNumber,
+        @RequestParam(required = false) String pickupCode,
         @RequestParam(required = false) String carrier,
         @RequestParam(required = false) String description,
         @RequestParam(required = false) String recipientFirstName,
@@ -328,6 +340,7 @@ public class PackageController {
 
             // Convert empty strings to null for proper query handling
             String trackingNumberParam = (trackingNumber != null && !trackingNumber.trim().isEmpty()) ? trackingNumber.trim() : null;
+            String pickupCodeParam = (pickupCode != null && !pickupCode.trim().isEmpty()) ? pickupCode.trim() : null;
             String carrierParam = (carrier != null && !carrier.trim().isEmpty()) ? carrier.trim() : null;
             String descriptionParam = (description != null && !description.trim().isEmpty()) ? description.trim() : null;
             String recipientFirstParam = (recipientFirstName != null && !recipientFirstName.trim().isEmpty()) ? recipientFirstName.trim() : null;
@@ -338,6 +351,7 @@ public class PackageController {
             // Perform comprehensive search
             java.util.List<Package> packages = packageRepo.searchPackages(
                 trackingNumberParam,
+                pickupCodeParam,
                 carrierParam,
                 descriptionParam,
                 recipientFirstParam,

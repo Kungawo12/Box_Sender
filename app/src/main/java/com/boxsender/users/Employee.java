@@ -49,6 +49,12 @@ public class Employee {
     @Column(name = "password_hash", nullable = false, length = 225)
     private String passwordHash;
 
+    // Role of the employee in the system
+    // Values: "ADMIN" (full access + role management), "MAILROOM_STAFF" (full operational access), "EMPLOYEE" (limited access)
+    // Default value is "EMPLOYEE" for security (least privilege principle)
+    @Column(nullable = false, length = 50)
+    private String role = "EMPLOYEE";
+
     // --- Getter and Setter Methods ---
     // These methods provide controlled access to private fields
     // Following JavaBean conventions for JPA and Spring Framework
@@ -131,5 +137,21 @@ public class Employee {
      */
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    /**
+     * Gets the employee's role in the system
+     * @return the role (ADMIN, MAILROOM_STAFF, or EMPLOYEE)
+     */
+    public String getRole() {
+        return role;
+    }
+
+    /**
+     * Sets the employee's role in the system
+     * @param role the role to set (ADMIN, MAILROOM_STAFF, or EMPLOYEE)
+     */
+    public void setRole(String role) {
+        this.role = role;
     }
 }

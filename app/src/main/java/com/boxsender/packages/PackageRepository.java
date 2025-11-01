@@ -120,6 +120,7 @@ public interface PackageRepository extends JpaRepository<Package, Long> {
      *
      * This method allows searching by:
      * - Tracking number (partial match)
+     * - Pickup code (exact match, case-insensitive) 🔐
      * - Carrier (partial match)
      * - Package description (partial match)
      * - Recipient first name (partial match)
@@ -130,6 +131,7 @@ public interface PackageRepository extends JpaRepository<Package, Long> {
      * All text searches are case-insensitive
      *
      * @param trackingNumber partial tracking number to search for
+     * @param pickupCode exact pickup code to search for (6-character verification code)
      * @param carrier partial carrier name to search for
      * @param description partial description to search for
      * @param recipientFirstName partial recipient first name to search for
@@ -141,6 +143,7 @@ public interface PackageRepository extends JpaRepository<Package, Long> {
      */
     @Query("SELECT p FROM Package p " +
            "WHERE (:trackingNumber IS NULL OR LOWER(p.trackingNumber) LIKE LOWER(CONCAT('%', :trackingNumber, '%'))) " +
+           "AND (:pickupCode IS NULL OR LOWER(p.pickupCode) = LOWER(:pickupCode)) " +
            "AND (:carrier IS NULL OR LOWER(p.carrier) LIKE LOWER(CONCAT('%', :carrier, '%'))) " +
            "AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%'))) " +
            "AND (:recipientFirstName IS NULL OR LOWER(p.recipient.firstName) LIKE LOWER(CONCAT('%', :recipientFirstName, '%'))) " +
@@ -149,6 +152,7 @@ public interface PackageRepository extends JpaRepository<Package, Long> {
            "AND (:status IS NULL OR p.status = :status)")
     List<Package> searchPackages(
         String trackingNumber,
+        String pickupCode,
         String carrier,
         String description,
         String recipientFirstName,

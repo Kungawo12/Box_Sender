@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Track current sort order
     let currentSortOrder = 'desc';
 
+    // Store current packages for export
+    let currentPackages = [];
+
     // Load all packages on page load
     performSearch();
 
@@ -124,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const packages = await response.json();
+            currentPackages = packages; // Store for export
             displayPackages(packages);
 
         } catch (error) {
@@ -244,4 +248,147 @@ document.addEventListener('DOMContentLoaded', () => {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    /**
+     * Export current search results to CSV
+     */
+    window.exportToCSV = function() {
+        if (!currentPackages || currentPackages.length === 0) {
+            alert('No packages to export');
+            return;
+        }
+
+        // CSV header
+        const headers = ['Tracking Number', 'Carrier', 'Description', 'Recipient Name', 'Recipient Email', 'Status', 'Logged At', 'Picked Up At'];
+
+        // CSV rows
+        const rows = currentPackages.map(pkg => {
+            const recipientName = pkg.recipient
+                ? `${pkg.recipient.firstName} ${pkg.recipient.lastName || ''}`.trim()
+                : 'Unknown';
+            const recipientEmail = pkg.recipient ? pkg.recipient.email : '';
+            const description = pkg.description || 'No description';
+            const loggedAt = pkg.createdAt ? new Date(pkg.createdAt).toLocaleString() : 'N/A';
+            const pickupAt = pkg.status === 'picked' && pkg.updatedAt ? new Date(pkg.updatedAt).toLocaleString() : '-';
+            const status = pkg.status === 'picked' ? 'Picked Up' : 'Waiting';
+
+            return [
+                pkg.trackingNumber || 'N/A',
+                pkg.carrier || 'N/A',
+                description,
+                recipientName,
+                recipientEmail,
+                status,
+                loggedAt,
+                pickupAt
+            ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',');
+        });
+
+        // Combine header and rows
+        const csv = [headers.join(','), ...rows].join('\n');
+
+        // Create download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `package_search_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    /**
+     * Export current search results to PDF
+     */
+    window.exportToPDF = function() {
+        if (!currentPackages || currentPackages.length === 0) {
+            alert('No packages to export');
+            return;
+        }
+
+        // Create printable HTML content
+        let content = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Package Search Results</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #0d6efd; font-size: 24px; margin-bottom: 10px; }
+                    .meta { color: #666; font-size: 12px; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                    th { background-color: #0d6efd; color: white; padding: 8px; text-align: left; border: 1px solid #ddd; }
+                    td { padding: 6px 8px; border: 1px solid #ddd; }
+                    tr:nth-child(even) { background-color: #f8f9fa; }
+                    .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: bold; }
+                    .badge-success { background-color: #198754; color: white; }
+                    .badge-warning { background-color: #ffc107; color: black; }
+                </style>
+            </head>
+            <body>
+                <h1>Box Sender - Package Search Results</h1>
+                <div class="meta">
+                    Generated: ${new Date().toLocaleString()}<br>
+                    Total Results: ${currentPackages.length}
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tracking Number</th>
+                            <th>Carrier</th>
+                            <th>Description</th>
+                            <th>Recipient</th>
+                            <th>Status</th>
+                            <th>Logged At</th>
+                            <th>Picked Up At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        currentPackages.forEach(pkg => {
+            const recipientName = pkg.recipient
+                ? `${pkg.recipient.firstName} ${pkg.recipient.lastName || ''}`.trim()
+                : 'Unknown';
+            const recipientEmail = pkg.recipient ? pkg.recipient.email : '';
+            const description = pkg.description || 'No description';
+            const loggedAt = pkg.createdAt ? new Date(pkg.createdAt).toLocaleString() : 'N/A';
+            const pickupAt = pkg.status === 'picked' && pkg.updatedAt ? new Date(pkg.updatedAt).toLocaleString() : '-';
+            const statusBadge = pkg.status === 'picked'
+                ? '<span class="badge badge-success">Picked Up</span>'
+                : '<span class="badge badge-warning">Waiting</span>';
+
+            content += `
+                <tr>
+                    <td><strong>${escapeHtml(pkg.trackingNumber || 'N/A')}</strong></td>
+                    <td>${escapeHtml(pkg.carrier || 'N/A')}</td>
+                    <td>${escapeHtml(description)}</td>
+                    <td>${escapeHtml(recipientName)}<br><small style="color: #666;">${escapeHtml(recipientEmail)}</small></td>
+                    <td>${statusBadge}</td>
+                    <td>${loggedAt}</td>
+                    <td>${pickupAt}</td>
+                </tr>
+            `;
+        });
+
+        content += `
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        // Open print dialog in new window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(content);
+        printWindow.document.close();
+        printWindow.focus();
+
+        // Wait for content to load, then trigger print
+        setTimeout(() => {
+            printWindow.print();
+        }, 250);
+    };
 });

@@ -80,9 +80,10 @@ public class AuthController {
    * - Display user's name in the UI
    * - Verify the user is still logged in
    * - Get user details without storing them client-side
+   * - Determine user's role for access control
    *
    * @param auth Authentication object containing logged-in user's info (injected by Spring)
-   * @return Map with user's first name, last name, and email
+   * @return Map with user's first name, last name, email, and role
    */
   @org.springframework.web.bind.annotation.GetMapping("/me")
   public Map<String, Object> me(Authentication auth) {
@@ -90,11 +91,12 @@ public class AuthController {
     // This is configured in SecurityConfig's UserDetailsService
     var emp = repo.findByEmail(auth.getName()).orElseThrow();
 
-    // Return user information as JSON
+    // Return user information as JSON including role for access control
     return Map.of(
         "firstName", emp.getFirstName(),
         "lastName",  emp.getLastName(),
-        "email",     emp.getEmail()
+        "email",     emp.getEmail(),
+        "role",      emp.getRole()  // Added for role-based UI controls
     );
   }
 
@@ -139,6 +141,10 @@ public class AuthController {
     // Step 3: Hash password with BCrypt before storing
     // BCrypt automatically generates salt and creates secure hash
     e.setPasswordHash(encoder.encode(body.password()));
+
+    // Step 3.5: Set default role to EMPLOYEE
+    // Even though Employee entity has default value, explicitly set it for clarity
+    e.setRole("EMPLOYEE");
 
     // Step 4: Save employee to database
     repo.save(e);

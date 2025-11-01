@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -30,6 +31,8 @@ import com.boxsender.users.EmployeeRepository;
  * 3. Session-based authentication (not JWT)
  * 4. URL access control (public vs. protected endpoints)
  * 5. Form-based login and logout
+ * 6. Role-based access control (ADMIN, MAILROOM_STAFF, EMPLOYEE)
+ * 7. Method-level security using @PreAuthorize annotations
  *
  * Spring Security Concepts:
  * - Authentication: Verifying who the user is (login)
@@ -45,6 +48,7 @@ import com.boxsender.users.EmployeeRepository;
  * 5. If valid, user is authenticated and session is created
  */
 @Configuration  // Tells Spring this class contains bean definitions
+@EnableMethodSecurity  // Enables @PreAuthorize, @Secured, @RolesAllowed annotations
 public class SecurityConfig {
 
   /**
@@ -134,9 +138,11 @@ public class SecurityConfig {
           .orElseThrow(() -> new UsernameNotFoundException("No user " + usernameEmail));
 
       // Convert Employee to Spring Security's UserDetails format
+      // Use the role from the database instead of hardcoded "USER"
+      // Employee.role values: ADMIN, MAILROOM_STAFF, EMPLOYEE
       return User.withUsername(e.getEmail())  // Username is email
           .password(e.getPasswordHash())  // Password is already BCrypt hashed
-          .roles("USER")  // Assign USER role (could extend for ADMIN, etc.)
+          .roles(e.getRole())  // Assign role from database (ADMIN, MAILROOM_STAFF, or EMPLOYEE)
           .build();
     };
   }

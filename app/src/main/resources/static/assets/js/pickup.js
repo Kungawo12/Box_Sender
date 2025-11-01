@@ -22,8 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const pickedUpBy = document.getElementById('pb').value.trim();
         const staff = document.getElementById('ps').value.trim();
 
-        // Validate pickup code format (6 alphanumeric characters)
-        if (pickupCode.length !== 6) {
+        // Validate that at least one identifier is provided
+        if (!trackingNumber && !pickupCode) {
+            showMessage('Please provide either a tracking number or pickup code', 'error');
+            return;
+        }
+
+        // Validate pickup code format if provided
+        if (pickupCode && pickupCode.length !== 6) {
             showMessage('Pickup code must be exactly 6 characters', 'error');
             return;
         }
@@ -33,16 +39,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const notes = staff ? `Staff notes: ${staff}` : '';
 
         try {
-            // Step 1: Find package by tracking number
-            const searchResponse = await fetch(
-                `/api/packages/search?trackingNumber=${encodeURIComponent(trackingNumber)}`,
-                {
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+            // Step 1: Find package by tracking number OR pickup code
+            let searchUrl = '/api/packages/search?';
+            const searchParams = [];
+
+            if (trackingNumber) {
+                searchParams.push(`trackingNumber=${encodeURIComponent(trackingNumber)}`);
+            }
+            if (pickupCode) {
+                searchParams.push(`pickupCode=${encodeURIComponent(pickupCode)}`);
+            }
+
+            searchUrl += searchParams.join('&');
+
+            const searchResponse = await fetch(searchUrl, {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
                 }
-            );
+            });
 
             if (!searchResponse.ok) {
                 if (searchResponse.status === 401) {
@@ -56,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check if package was found
             if (!packages || packages.length === 0) {
-                showMessage('Package not found. Please check the tracking number.', 'error');
+                showMessage('Package not found. Please check the tracking number or pickup code.', 'error');
                 return;
             }
 
