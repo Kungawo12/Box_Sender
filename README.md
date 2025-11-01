@@ -1,6 +1,6 @@
 # Box Sender - Package Tracking System
 
-A comprehensive full-stack web application for managing package deliveries in mailroom environments. Employees can log incoming packages, track pickups, search package history, and generate reports. Recipients automatically receive email notifications when their packages arrive.
+A comprehensive full-stack web application for managing package deliveries in mailroom environments with role-based access control. The system supports three user roles (Admin, Mailroom Staff, and Employee) with different permission levels, automated pickup codes, email notifications, and comprehensive package tracking.
 
 ## Table of Contents
 
@@ -9,20 +9,20 @@ A comprehensive full-stack web application for managing package deliveries in ma
 - [Technology Stack](#technology-stack)
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
-- [Database Setup](#database-setup)
-- [Email Configuration](#email-configuration)
+- [User Roles & Permissions](#user-roles--permissions)
 - [Project Structure](#project-structure)
-- [Use Cases](#use-cases)
+- [How to Use](#how-to-use)
 - [API Endpoints](#api-endpoints)
 - [Database Schema](#database-schema)
 - [Security](#security)
-- [Development Guide](#development-guide)
-- [Testing](#testing)
+- [Email Configuration](#email-configuration)
 - [Troubleshooting](#troubleshooting)
+
+---
 
 ## Overview
 
-Box Sender is a complete package tracking system designed for mailrooms, front desks, or any environment where packages need to be logged, tracked, and recipients notified. The system provides comprehensive package lifecycle management from arrival to pickup.
+**Box Sender** is a complete package tracking system designed for mailrooms, front desks, or any environment where packages need to be logged, tracked, and recipients notified. The system provides comprehensive package lifecycle management from arrival to pickup, with role-based access control to ensure proper authorization.
 
 ### Team Members
 - Casey Cunningham
@@ -30,47 +30,44 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
 - Nick Herberg
 - Brian Willems
 
----
-
-## 🆕 What's New in Version 2.0
-
-### 🔐 Automated Pickup Code System
-- **6-character verification codes** automatically generated for each package
-- Secure pickup process requiring code validation
-- Codes sent via email in large, easy-to-read format
-- Prevents unauthorized package pickup
-- Cryptographically secure random generation
-
-### 🔍 Enhanced Package Search
-- **Multi-field search**: tracking number, carrier, description, recipient name/email
-- **Dynamic sorting** by any column (ascending/descending)
-- Apply button for controlled searches
-- Real-time result count
-- Improved UI with better feedback
-
-### ✉️ Email Confirmation
-- Employee sees immediate confirmation after logging packages
-- **Pickup code displayed** prominently to employee
-- Email delivery status indicator (✉️ success / ⚠️ failed)
-- Warning if email fails so employee can manually inform recipient
-
-### 📊 Database Improvements
-- Added `pickup_code` column with index for fast lookups
-- Dummy data script with 45 test packages for demonstrations
-- Database migration scripts for easy upgrades
+### Key Highlights
+- 🔐 **Role-Based Access Control (RBAC)** - Three permission levels: Admin, Mailroom Staff, Employee
+- 🎫 **Automated Pickup Codes** - 6-character secure codes for package verification
+- ✉️ **Email Notifications** - Automatic notifications with pickup codes
+- 🔍 **Advanced Search** - Multi-field search with sorting and filtering
+- 📊 **CSV/PDF Export** - Export search results and dashboard data
+- 👥 **Admin Panel** - Full employee management (create, edit, delete accounts)
 
 ---
 
 ## Features
+
+### 🔐 Role-Based Access Control (RBAC)
+
+The system implements a three-tier permission model:
+
+| Role | Permissions |
+|------|-------------|
+| **ADMIN** | Full system access + employee management (create/edit/delete accounts, change roles) |
+| **MAILROOM_STAFF** | Operational access (log packages, pickup packages, search) |
+| **EMPLOYEE** | Limited access (pickup packages, search only - cannot log packages) |
+
+**Security Features:**
+- Default role: EMPLOYEE (least privilege principle)
+- Admins can manage roles via Admin Panel
+- Method-level security with `@PreAuthorize` annotations
+- Dynamic UI rendering based on user role
+- Prevents privilege escalation
 
 ### ✅ Core Functionality (All 7 Use Cases Implemented)
 
 1. **UC-01: Employee Authentication**
    - Secure registration and login with BCrypt password encryption
    - Session-based authentication
+   - Role assignment on registration (default: EMPLOYEE)
    - Automatic session management
 
-2. **UC-02: Package Logging**
+2. **UC-02: Package Logging** *(ADMIN & MAILROOM_STAFF only)*
    - Quick entry of package details with tracking numbers
    - **Automatic 6-character pickup code generation** 🔐
    - Automatic recipient creation or lookup
@@ -78,68 +75,83 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
    - Success confirmation showing code and email status
    - Duplicate tracking number prevention
 
-3. **UC-03: Package Pickup** ✨ *Enhanced*
-   - **Secure pickup code verification** 🔐
-   - Mark packages as picked up only with valid code
+3. **UC-03: Package Pickup** *(All roles)*
+   - **Secure pickup code verification** or tracking number lookup 🔐
+   - Mark packages as picked up with valid code or tracking number
    - Signature/verification capture
    - Automatic timestamp recording
    - Staff notes for audit trail
    - Status change from "received" to "picked"
 
-4. **UC-04: Recipient Management** ✨ *New*
+4. **UC-04: Recipient Management** *(ADMIN & MAILROOM_STAFF)*
    - Full CRUD operations for recipients
    - View all recipients
    - Update recipient information
    - Department assignment
 
-5. **UC-05: Package Search** ✨ *Enhanced*
+5. **UC-05: Package Search** *(All roles)*
    - **Multi-field comprehensive search**
    - Search by: tracking number, carrier, description, recipient name/email
    - **Dynamic sorting** by any column (ascending/descending)
    - Filter by status (received/picked)
-   - Apply button for controlled searches
+   - **CSV and PDF export** of search results
    - Real-time result count
    - Relative timestamps ("2 hours ago")
 
-6. **UC-06: Generate Reports** ✨ *New*
+6. **UC-06: Generate Reports** *(ADMIN & MAILROOM_STAFF)*
    - Daily package logs
    - Overdue package reports (>7 days)
    - Recipient package history
    - System summary statistics
 
-7. **UC-07: Logout**
+7. **UC-07: Logout** *(All roles)*
    - Secure session termination
 
+### 👥 Admin Panel Features *(ADMIN only)*
+
+- **Create Employee Accounts** - Add new employees with specific roles
+- **Edit Employee Details** - Update name, email, password, and role
+- **Delete Employees** - Remove employee accounts (cannot delete own account)
+- **View All Employees** - Comprehensive table with role badges
+- **Role Management** - Promote/demote users between roles
+
 ### 📊 Dashboard & Analytics
+
 - Real-time package statistics
-- Recent activity feed (auto-refreshes every 30 seconds)
+- Recent activity feed with **CSV/PDF export**
 - Overdue package alerts
 - Pickup rate tracking
 - Total packages and recipient counts
+- Role-based UI (shows/hides Log Package and Admin Panel based on role)
 
 ### 🔒 Security Features
+
 - BCrypt password hashing (10 rounds)
-- Spring Security integration
+- Spring Security integration with method-level authorization
 - Session-based authentication with HTTPOnly cookies
+- Role-based access control (RBAC)
 - HTML escaping to prevent XSS attacks
 - CSRF protection
-- Protected API endpoints
+- Protected API endpoints with `@PreAuthorize`
+- Audit logging for role changes and account management
+
+---
 
 ## Technology Stack
 
 ### Backend
-- **Java 17+** - Programming language
-- **Spring Boot 3.x** - Application framework
-- **Spring Security** - Authentication and authorization
+- **Java 21** - Programming language
+- **Spring Boot 3.5.6** - Application framework
+- **Spring Security** - Authentication and authorization with `@EnableMethodSecurity`
 - **Spring Data JPA** - Database access with repository pattern
-- **Hibernate** - ORM (Object-Relational Mapping)
+- **Hibernate 6.6** - ORM (Object-Relational Mapping)
 - **MySQL** - Production database with optimized indexes
 - **Maven** - Dependency management and build tool
 
 ### Frontend
 - **HTML5** - Page structure
 - **CSS3** - Custom styling
-- **Bootstrap 5** - Responsive UI framework
+- **Bootstrap 5.3.3** - Responsive UI framework
 - **JavaScript (ES6+)** - Client-side logic with async/await
 - **Fetch API** - RESTful API consumption
 
@@ -147,6 +159,8 @@ Box Sender is a complete package tracking system designed for mailrooms, front d
 - **JavaMailSender** - Spring email abstraction
 - **Brevo (SMTP)** - Email service provider (300 emails/day free tier)
 - **SecureRandom** - Cryptographically secure pickup code generation
+
+---
 
 ## Architecture
 
@@ -161,16 +175,18 @@ The application follows a **layered architecture** pattern with clear separation
 │   - log.html (Package Logging)              │
 │   - pickup.html (Mark Pickup)               │
 │   - search.html (Search Packages)           │
+│   - admin.html (Admin Panel) 🔐 ADMIN ONLY  │
 └──────────────┬──────────────────────────────┘
                │ HTTP/JSON (REST API)
                ↓
 ┌─────────────────────────────────────────────┐
 │       Controllers (REST API Layer)          │
-│   - AuthController                          │
-│   - PackageController                       │
+│   - AuthController (authentication)         │
+│   - PackageController (@PreAuthorize)       │
 │   - RecipientController                     │
 │   - ReportController                        │
 │   - DashboardController                     │
+│   - AdminController 🔐 ADMIN ONLY           │
 └──────────────┬──────────────────────────────┘
                │
                ↓
@@ -192,7 +208,7 @@ The application follows a **layered architecture** pattern with clear separation
                ↓
 ┌─────────────────────────────────────────────┐
 │        Database (MySQL)                     │
-│   - employees (authentication)              │
+│   - employees (authentication + roles)      │
 │   - packages (package tracking)             │
 │   - recipients (recipient info)             │
 │   - reports (generated reports)             │
@@ -201,11 +217,46 @@ The application follows a **layered architecture** pattern with clear separation
 └─────────────────────────────────────────────┘
 ```
 
+### Security Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│     Spring Security Filter Chain            │
+│   - Session Management                      │
+│   - Authentication Filter                   │
+│   - Authorization Filter                    │
+└──────────────┬──────────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────────┐
+│     SecurityConfig                          │
+│   - @EnableMethodSecurity                   │
+│   - UserDetailsService (role loading)       │
+│   - BCryptPasswordEncoder                   │
+│   - DaoAuthenticationProvider               │
+└──────────────┬──────────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────────┐
+│     Controllers (Method-Level Security)     │
+│   - @PreAuthorize("hasRole('ADMIN')")       │
+│   - @PreAuthorize("hasAnyRole(...)")        │
+└──────────────┬──────────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────────┐
+│     Database (employees table)              │
+│   - role VARCHAR(50) DEFAULT 'EMPLOYEE'     │
+└─────────────────────────────────────────────┘
+```
+
+---
+
 ## Getting Started
 
 ### Prerequisites
 
-- **Java 17 or higher** ([Download](https://adoptium.net/))
+- **Java 21 or higher** ([Download](https://adoptium.net/))
 - **Maven 3.6+** ([Download](https://maven.apache.org/download.cgi))
 - **MySQL 8.0+** ([Download](https://dev.mysql.com/downloads/mysql/))
 - **IDE** (IntelliJ IDEA, Eclipse, or VS Code recommended)
@@ -220,12 +271,13 @@ The application follows a **layered architecture** pattern with clear separation
    ```
 
 2. **Set up MySQL database**
-   ```sql
-   -- Create database
-   CREATE DATABASE boxsender;
 
-   -- Import schema (from root directory)
-   mysql -u root -p boxsender < boxsender_complete.sql
+   Create database and import schema:
+   ```bash
+   mysql -u root -p
+   CREATE DATABASE boxsender;
+   USE boxsender;
+   SOURCE boxsender.sql;
    ```
 
 3. **Configure application**
@@ -233,9 +285,13 @@ The application follows a **layered architecture** pattern with clear separation
    Edit `app/src/main/resources/application.properties`:
    ```properties
    # Database Configuration
-   spring.datasource.url=jdbc:mysql://localhost:3306/boxsender
+   spring.datasource.url=jdbc:mysql://localhost:3307/boxsender
    spring.datasource.username=root
    spring.datasource.password=your_password
+
+   # JPA/Hibernate settings
+   spring.jpa.hibernate.ddl-auto=update
+   spring.jpa.show-sql=false
    ```
 
 4. **Set up Brevo email (optional but recommended)**
@@ -256,66 +312,419 @@ The application follows a **layered architecture** pattern with clear separation
    **First time setup:**
    - Click "Register" to create an employee account
    - Use your email and create a password
+   - You'll be assigned the EMPLOYEE role by default
    - You'll be automatically logged in
 
-## Database Setup
+7. **Create admin account** *(Optional)*
 
-### Option 1: Complete Schema Import (Recommended)
+   To create an admin account, either:
+   - **Option A:** Have an existing admin use the Admin Panel to promote you
+   - **Option B:** Manually update the database:
+     ```sql
+     UPDATE employees SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+     ```
 
-The `boxsender_complete.sql` file includes all tables with optimizations:
+---
 
-```bash
-mysql -u root -p
-CREATE DATABASE boxsender;
-USE boxsender;
-source boxsender_complete.sql;
+## User Roles & Permissions
+
+### Role Hierarchy
+
+```
+ADMIN
+  └─> Full Access
+      ├─ Manage employee accounts (create, edit, delete, change roles)
+      ├─ Access Admin Panel
+      ├─ Log packages
+      ├─ Pickup packages
+      └─ Search packages
+
+MAILROOM_STAFF
+  └─> Operational Access
+      ├─ Log packages
+      ├─ Pickup packages
+      └─ Search packages
+
+EMPLOYEE
+  └─> Limited Access
+      ├─ Pickup packages
+      └─ Search packages
 ```
 
-**This includes:**
-- All 6 required tables (employees, packages, recipients, reports, activity_log, notifications)
-- **Pickup code column** for secure package verification 🔐
-- ENUM validation for package status
-- UNIQUE indexes on tracking numbers and emails
-- Performance indexes for fast searches (including pickup codes)
-- Composite indexes for dashboard queries
-- Foreign key constraints with proper cascading
+### Dashboard Views by Role
 
-### Option 2: Manual Table Creation
+**ADMIN sees:**
+- Dashboard
+- Log Package card
+- Package Pickup card
+- Search Packages card
+- **Admin Panel card** 🔐
 
-If you prefer to create tables manually or already have an existing database, use the migration scripts:
+**MAILROOM_STAFF sees:**
+- Dashboard
+- Log Package card
+- Package Pickup card
+- Search Packages card
 
-```bash
-# Apply improvements to existing database
-mysql -u root -p boxsender < database_improvements.sql
+**EMPLOYEE sees:**
+- Dashboard
+- Package Pickup card
+- Search Packages card
 
-# Add pickup code feature (required for version 2.0+)
-mysql -u root -p boxsender < add_pickup_code.sql
+### Protected Endpoints
+
+| Endpoint | ADMIN | MAILROOM_STAFF | EMPLOYEE |
+|----------|-------|----------------|----------|
+| `POST /api/packages` | ✅ | ✅ | ❌ |
+| `PUT /api/packages/{id}/pickup` | ✅ | ✅ | ✅ |
+| `GET /api/packages/search` | ✅ | ✅ | ✅ |
+| `GET /api/admin/**` | ✅ | ❌ | ❌ |
+| `POST /api/admin/employees` | ✅ | ❌ | ❌ |
+| `PUT /api/admin/employees/{id}` | ✅ | ❌ | ❌ |
+| `DELETE /api/admin/employees/{id}` | ✅ | ❌ | ❌ |
+
+---
+
+## Project Structure
+
+```
+Box_Sender/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/boxsender/
+│   │   │   │   ├── AppApplication.java              # Main entry point
+│   │   │   │   ├── admin/                           # 🆕 Admin functionality
+│   │   │   │   │   └── AdminController.java         # Employee management API
+│   │   │   │   ├── auth/
+│   │   │   │   │   └── AuthController.java          # Login/register + role info
+│   │   │   │   ├── config/
+│   │   │   │   │   └── SecurityConfig.java          # RBAC + @EnableMethodSecurity
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   └── DashboardController.java     # Statistics API
+│   │   │   │   ├── email/
+│   │   │   │   │   └── EmailService.java            # Email notifications
+│   │   │   │   ├── packages/
+│   │   │   │   │   ├── Package.java                 # Package entity
+│   │   │   │   │   ├── PackageController.java       # Package CRUD + @PreAuthorize
+│   │   │   │   │   └── PackageRepository.java       # Database queries
+│   │   │   │   ├── recipients/
+│   │   │   │   │   ├── Recipient.java               # Recipient entity
+│   │   │   │   │   ├── RecipientController.java     # Recipient CRUD
+│   │   │   │   │   └── RecipientRepository.java     # Database queries
+│   │   │   │   ├── reports/
+│   │   │   │   │   ├── Report.java                  # Report entity
+│   │   │   │   │   ├── ReportController.java        # Report generation API
+│   │   │   │   │   ├── ReportRepository.java        # Database queries
+│   │   │   │   │   └── ReportService.java           # Report business logic
+│   │   │   │   └── users/
+│   │   │   │       ├── Employee.java                # Employee entity + role field
+│   │   │   │       └── EmployeeRepository.java      # Database queries
+│   │   │   └── resources/
+│   │   │       ├── application.properties           # App configuration
+│   │   │       ├── db/migration/                    # Database migrations
+│   │   │       │   └── V3__add_employee_roles.sql   # Role column migration
+│   │   │       └── static/                          # Frontend files
+│   │   │           ├── index.html                   # Login/registration
+│   │   │           ├── dashboard.html               # Dashboard (role-based UI)
+│   │   │           ├── log.html                     # Package logging
+│   │   │           ├── pickup.html                  # Package pickup
+│   │   │           ├── search.html                  # Package search + export
+│   │   │           ├── admin.html                   # 🆕 Admin panel
+│   │   │           └── assets/
+│   │   │               ├── js/
+│   │   │               │   ├── api.js               # API utilities
+│   │   │               │   ├── login.js             # Auth logic
+│   │   │               │   ├── dashboard.js         # Dashboard + role-based UI
+│   │   │               │   ├── log.js               # Package logging
+│   │   │               │   ├── pickup.js            # Package pickup (code or tracking)
+│   │   │               │   ├── search.js            # Search + CSV/PDF export
+│   │   │               │   └── admin.js             # 🆕 Admin panel logic
+│   │   │               └── Css/
+│   │   │                   └── style.css            # Custom styles
+│   │   └── test/
+│   │       └── java/                                # Unit tests
+│   └── pom.xml                                      # Maven dependencies
+├── boxsender_complete.sql                           # Complete DB schema with roles
+├── fix_employee_roles.sql                           # Manual role fix script
+└── README.md                                        # This file
 ```
 
-### Option 3: Add Dummy Test Data
+---
 
-To populate your database with realistic test data for demonstration:
+## How to Use
 
-```bash
-# Import 45 packages, 20 recipients, 5 employees, and sample reports
-mysql -u root -p boxsender < dummy_data.sql
+### For Admins
+
+1. **Log in** with admin credentials
+2. **Dashboard** shows all statistics and recent activity
+3. **Admin Panel** (Admin Panel card on dashboard):
+   - View all employees with their roles
+   - **Create new employees**: Click "Create Account", fill form with name, email, password, role
+   - **Edit employees**: Click "Edit" button, update details (password optional)
+   - **Delete employees**: Click "Delete" button (cannot delete own account)
+   - **Change roles**: Edit employee and change role dropdown
+4. **Log Package** (if needed):
+   - Enter tracking number, carrier, description
+   - Enter recipient name and email
+   - System generates 6-character pickup code
+   - Email sent automatically with code
+5. **Pickup Package** (if needed):
+   - Enter tracking number OR pickup code
+   - Verify recipient details
+   - Mark as picked up
+6. **Search Packages**:
+   - Use multi-field search
+   - Export results to CSV or PDF
+7. **Export Dashboard**: Click CSV or PDF export buttons
+
+### For Mailroom Staff
+
+1. **Log in** with mailroom staff credentials
+2. **Dashboard** shows statistics and recent activity
+3. **Log Package**:
+   - Click "Log Package" card on dashboard
+   - Enter tracking number, carrier, description
+   - Enter recipient name and email
+   - System generates 6-character pickup code
+   - Email sent automatically with code
+   - Confirmation shows pickup code and email status
+4. **Pickup Package**:
+   - Click "Package Pickup" card
+   - Enter tracking number OR ask recipient for pickup code
+   - Verify recipient identity
+   - Enter signature/notes
+   - Click "Confirm Pickup"
+5. **Search Packages**:
+   - Click "Search Packages" card
+   - Search by tracking number, carrier, recipient name/email
+   - Filter by status (received/picked up)
+   - Sort by any column
+   - Export results to CSV or PDF
+
+### For Employees
+
+1. **Log in** with employee credentials
+2. **Dashboard** shows limited statistics
+   - No "Log Package" card (hidden)
+   - No "Admin Panel" card (hidden)
+3. **Pickup Package**:
+   - Click "Package Pickup" card
+   - Ask recipient for tracking number or pickup code
+   - Enter tracking number OR pickup code
+   - Verify recipient identity
+   - Enter signature/notes
+   - Click "Confirm Pickup"
+4. **Search Packages**:
+   - Click "Search Packages" card
+   - Search for packages
+   - View package status
+   - Export results to CSV or PDF
+
+### Package Pickup Flow (All Roles)
+
+**Option 1: Using Pickup Code** (Recommended)
+1. Recipient receives email with 6-character code (e.g., "A7K2M9")
+2. Recipient shows code to mailroom staff
+3. Staff enters code in pickup form
+4. System finds package and verifies code
+5. Staff verifies recipient identity
+6. Package marked as picked up
+
+**Option 2: Using Tracking Number**
+1. Staff asks for tracking number
+2. Staff enters tracking number in pickup form
+3. System finds package
+4. Staff verifies recipient identity
+5. Package marked as picked up
+
+---
+
+## API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description | Auth | Request Body |
+|--------|----------|-------------|------|--------------|
+| POST | `/api/auth/register` | Register employee (default role: EMPLOYEE) | No | `{firstName, lastName, email, password}` |
+| POST | `/api/auth/login` | Login employee | No | `{email, password}` |
+| GET | `/api/auth/me` | Get current user info (includes role) | Yes | - |
+| POST | `/api/auth/logout` | Logout | No | - |
+
+### Admin (ADMIN only)
+
+| Method | Endpoint | Description | Auth | Request Body |
+|--------|----------|-------------|------|--------------|
+| GET | `/api/admin/employees` | Get all employees | ADMIN | - |
+| POST | `/api/admin/employees` | Create employee account | ADMIN | `{firstName, lastName, email, password, role}` |
+| PUT | `/api/admin/employees/{id}` | Update employee (name, email, password, role) | ADMIN | `{firstName?, lastName?, email?, password?, role?}` |
+| DELETE | `/api/admin/employees/{id}` | Delete employee | ADMIN | - |
+| PUT | `/api/admin/employees/{id}/role` | Update employee role only | ADMIN | `{role}` |
+
+### Packages
+
+| Method | Endpoint | Description | Auth | Request Body |
+|--------|----------|-------------|------|--------------|
+| POST | `/api/packages` | Log new package (auto-generates pickup code) | ADMIN, MAILROOM_STAFF | `{trackingNumber, carrier, description, recipientFirst, recipientLast, recipientEmail}` |
+| GET | `/api/packages` | Get all packages | All | - |
+| GET | `/api/packages/search` | Advanced search with sorting | All | Query params: `trackingNumber`, `carrier`, `description`, `recipientFirstName`, `recipientLastName`, `recipientEmail`, `status`, `sortBy`, `sortOrder` |
+| PUT | `/api/packages/{id}/pickup` | Mark as picked up (requires code OR tracking number) | All | `{pickupCode?, trackingNumber?, signature, notes}` |
+
+### Recipients
+
+| Method | Endpoint | Description | Auth | Request Body |
+|--------|----------|-------------|------|--------------|
+| GET | `/api/recipients` | Get all recipients | All | - |
+| GET | `/api/recipients/{id}` | Get recipient | All | - |
+| POST | `/api/recipients` | Create recipient | ADMIN, MAILROOM_STAFF | `{firstName, lastName, email, department}` |
+| PUT | `/api/recipients/{id}` | Update recipient | ADMIN, MAILROOM_STAFF | `{firstName, lastName, email, department}` |
+| DELETE | `/api/recipients/{id}` | Delete recipient | ADMIN, MAILROOM_STAFF | - |
+
+### Dashboard
+
+| Method | Endpoint | Description | Auth | Returns |
+|--------|----------|-------------|------|---------|
+| GET | `/api/dashboard/stats` | Get statistics | All | `{totalPackages, pendingPickups, pickedUpToday, overduePackages, totalRecipients, pickupRate}` |
+| GET | `/api/dashboard/recent` | Get recent packages | All | Array of 20 most recent packages |
+| GET | `/api/dashboard/overdue` | Get overdue packages | All | Array of packages >7 days old |
+
+---
+
+## Database Schema
+
+### employees table (with roles)
+
+```sql
+CREATE TABLE employees (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  email VARCHAR(200) UNIQUE NOT NULL,
+  password_hash VARCHAR(225) NOT NULL,
+  role VARCHAR(50) NOT NULL DEFAULT 'EMPLOYEE',  -- 🆕 ADMIN, MAILROOM_STAFF, EMPLOYEE
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_role (role)
+);
 ```
 
-**Test employee credentials (all have password: "password123"):**
-- sarah.johnson@metrostate.edu
-- michael.chen@metrostate.edu
-- emily.rodriguez@metrostate.edu
-- james.williams@metrostate.edu
-- lisa.anderson@metrostate.edu
+### packages table (with pickup codes)
 
-### Database Schema Highlights
+```sql
+CREATE TABLE packages (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  tracking_number VARCHAR(255) UNIQUE NOT NULL,
+  carrier VARCHAR(45) NOT NULL,
+  description TEXT,
+  status VARCHAR(20) DEFAULT 'received' NOT NULL,
+  pickup_code VARCHAR(10),  -- 🔐 6-character code (e.g., "A7K2M9")
+  recipient_id BIGINT NOT NULL,
+  employee_id BIGINT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (recipient_id) REFERENCES recipients(id),
+  FOREIGN KEY (employee_id) REFERENCES employees(id),
+  INDEX idx_status (status),
+  INDEX idx_pickup_code (pickup_code),
+  INDEX idx_created_at (created_at),
+  INDEX idx_tracking_number (tracking_number)
+);
+```
 
-**Key Features:**
-- ✅ **Data Integrity:** UNIQUE constraints on tracking numbers and emails
-- ✅ **Performance:** 10+ indexes for fast queries (search, dashboard, reports)
-- ✅ **Validation:** ENUM for package status (prevents invalid data)
-- ✅ **Relationships:** Proper foreign keys with cascading deletes
-- ✅ **Timestamps:** Automatic `created_at` and `updated_at` tracking
+### recipients table
+
+```sql
+CREATE TABLE recipients (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  first_name VARCHAR(45) NOT NULL,
+  last_name VARCHAR(45) NOT NULL,
+  email VARCHAR(225) UNIQUE NOT NULL,
+  department VARCHAR(120),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_email (email)
+);
+```
+
+---
+
+## Security
+
+### Role-Based Access Control (RBAC)
+
+**Implementation:** [SecurityConfig.java](app/src/main/java/com/boxsender/config/SecurityConfig.java)
+
+1. **@EnableMethodSecurity**
+   - Enables `@PreAuthorize`, `@Secured`, `@RolesAllowed` annotations
+   - Method-level security on controller endpoints
+
+2. **Dynamic Role Loading**
+   ```java
+   // SecurityConfig.java
+   return User.withUsername(employee.getEmail())
+       .password(employee.getPasswordHash())
+       .roles(employee.getRole())  // Load from database
+       .build();
+   ```
+
+3. **Controller Protection**
+   ```java
+   @PostMapping
+   @PreAuthorize("hasAnyRole('ADMIN', 'MAILROOM_STAFF')")
+   public ResponseEntity<?> logPackage(...) {
+       // Only ADMIN and MAILROOM_STAFF can access
+   }
+   ```
+
+4. **Admin-Only Endpoints**
+   ```java
+   @RestController
+   @RequestMapping("/api/admin")
+   @PreAuthorize("hasRole('ADMIN')")  // Entire controller protected
+   public class AdminController {
+       // All endpoints require ADMIN role
+   }
+   ```
+
+### Password Security
+
+1. **BCrypt Hashing**
+   - 10 rounds (automatic salt generation)
+   - Passwords NEVER stored in plain text
+   - Hash example: `$2a$10$jhk83FuD5oMJW9DpEDZJ1...`
+
+2. **Session Management**
+   - Server-side sessions (not JWT)
+   - HTTPOnly cookies (JavaScript cannot access)
+   - Automatic timeout after inactivity
+
+### Pickup Code Security
+
+**Implementation:** [PackageController.java](app/src/main/java/com/boxsender/packages/PackageController.java)
+
+1. **Code Generation**
+   - Cryptographically secure random generation using `SecureRandom`
+   - 6-character alphanumeric codes (e.g., "A7K2M9")
+   - Excludes confusing characters (0, O, I, 1)
+   - Character set: `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`
+
+2. **Verification Process**
+   - Code required during package pickup (or tracking number)
+   - Case-insensitive validation
+   - Prevents unauthorized package collection
+
+### Audit Logging
+
+All administrative actions are logged:
+- Role changes (who changed what, when)
+- Account creation (who created which account, with what role)
+- Account deletion (who deleted which account)
+- Employee updates (what changed, who made the change)
+
+Logs are printed to console and can be redirected to files in production.
+
+---
 
 ## Email Configuration
 
@@ -332,28 +741,16 @@ mysql -u root -p boxsender < dummy_data.sql
    - Click **SMTP** tab
    - Generate a new SMTP key
 
-3. **Verify Sender Email**
-   - Go to **Senders & IP** in Brevo
-   - Add your "from" email address
-   - Verify it via the confirmation email
+3. **Configure Application**
 
-4. **Configure Application**
-
-   **Option A: Environment Variables (Recommended for security)**
-
-   Windows (Command Prompt):
-   ```cmd
-   set BREVO_USERNAME=your-email@example.com
-   set BREVO_PASSWORD=your-smtp-key
-   set BREVO_FROM_EMAIL=your-verified-email@example.com
-   mvn spring-boot:run
-   ```
+   **Option A: Environment Variables (Recommended)**
 
    Windows (PowerShell):
    ```powershell
    $env:BREVO_USERNAME="your-email@example.com"
    $env:BREVO_PASSWORD="your-smtp-key"
    $env:BREVO_FROM_EMAIL="your-verified-email@example.com"
+   cd app
    mvn spring-boot:run
    ```
 
@@ -362,10 +759,11 @@ mysql -u root -p boxsender < dummy_data.sql
    export BREVO_USERNAME=your-email@example.com
    export BREVO_PASSWORD=your-smtp-key
    export BREVO_FROM_EMAIL=your-verified-email@example.com
+   cd app
    mvn spring-boot:run
    ```
 
-   **Option B: Direct Configuration (Not recommended for production)**
+   **Option B: Direct Configuration**
 
    Edit `application.properties`:
    ```properties
@@ -374,836 +772,81 @@ mysql -u root -p boxsender < dummy_data.sql
    brevo.from.email=your-verified-email@example.com
    ```
 
-   ⚠️ **Important:** Add `application.properties` to `.gitignore` if using this method!
-
 ### Email Notification Features
 
 When a package is logged, recipients receive a professional HTML email with:
 - Personalized greeting
-- Large tracking number display
+- **Large pickup code display** in green box
+- Tracking number
 - Carrier information
 - Pickup instructions
+- Warning to keep code secure
 - Responsive design (mobile-friendly)
-- XSS protection via HTML escaping
 
-## Project Structure
-
-```
-Box_Sender/
-├── app/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/boxsender/
-│   │   │   │   ├── AppApplication.java              # Main entry point
-│   │   │   │   ├── auth/
-│   │   │   │   │   └── AuthController.java          # Login/register endpoints
-│   │   │   │   ├── config/
-│   │   │   │   │   └── SecurityConfig.java          # Security & BCrypt config
-│   │   │   │   ├── dashboard/
-│   │   │   │   │   └── DashboardController.java     # Statistics API
-│   │   │   │   ├── email/
-│   │   │   │   │   └── EmailService.java            # Email notifications
-│   │   │   │   ├── packages/
-│   │   │   │   │   ├── Package.java                 # Package entity
-│   │   │   │   │   ├── PackageController.java       # Package CRUD + search
-│   │   │   │   │   └── PackageRepository.java       # Database queries
-│   │   │   │   ├── recipients/
-│   │   │   │   │   ├── Recipient.java               # Recipient entity
-│   │   │   │   │   ├── RecipientController.java     # Recipient CRUD
-│   │   │   │   │   └── RecipientRepository.java     # Database queries
-│   │   │   │   ├── reports/
-│   │   │   │   │   ├── Report.java                  # Report entity
-│   │   │   │   │   ├── ReportController.java        # Report generation API
-│   │   │   │   │   ├── ReportRepository.java        # Database queries
-│   │   │   │   │   └── ReportService.java           # Report business logic
-│   │   │   │   └── users/
-│   │   │   │       ├── Employee.java                # Employee entity
-│   │   │   │       └── EmployeeRepository.java      # Database queries
-│   │   │   └── resources/
-│   │   │       ├── application.properties           # App configuration
-│   │   │       └── static/                          # Frontend files
-│   │   │           ├── index.html                   # Login/registration
-│   │   │           ├── dashboard.html               # Dashboard & stats
-│   │   │           ├── log.html                     # Package logging form
-│   │   │           ├── pickup.html                  # Package pickup form
-│   │   │           ├── search.html                  # Package search
-│   │   │           └── assets/
-│   │   │               ├── js/
-│   │   │               │   ├── api.js               # API utilities
-│   │   │               │   ├── login.js             # Auth logic
-│   │   │               │   ├── dashboard.js         # Dashboard + stats
-│   │   │               │   ├── log.js               # Package logging
-│   │   │               │   ├── pickup.js            # Package pickup
-│   │   │               │   └── search.js            # Search functionality
-│   │   │               └── Css/
-│   │   │                   └── style.css            # Custom styles
-│   │   └── test/
-│   │       └── java/                                # Unit tests
-│   └── pom.xml                                      # Maven dependencies
-├── boxsender_complete.sql                           # Complete DB schema
-├── database_improvements.sql                        # DB migration script
-└── README.md                                        # This file
-```
-
-## Use Cases
-
-### UC-01: Employee Login/Registration
-
-**File:** [AuthController.java](app/src/main/java/com/boxsender/auth/AuthController.java)
-
-**Endpoints:**
-```java
-POST /api/auth/register  // Create new employee account
-POST /api/auth/login     // Authenticate employee
-GET  /api/auth/me        // Get current user info
-POST /api/auth/logout    // End session
-```
-
-**Flow:**
-1. Employee visits `/index.html`
-2. Submits registration form
-3. Backend hashes password with BCrypt
-4. Saves employee to database
-5. Automatically logs in and creates session
-6. Redirects to dashboard
-
-### UC-02: Log Package
-
-**File:** [PackageController.java](app/src/main/java/com/boxsender/packages/PackageController.java)
-
-**Endpoint:**
-```java
-POST /api/packages
-```
-
-**Flow:**
-1. Employee navigates to `/log.html`
-2. Enters package details (tracking number, carrier, recipient)
-3. Backend validates tracking number is unique
-4. Finds or creates recipient record
-5. Saves package with status "received"
-6. Sends email notification
-7. Returns success message
-
-### UC-03: Pick Up Package ✨
-
-**File:** [PackageController.java](app/src/main/java/com/boxsender/packages/PackageController.java)
-
-**Endpoint:**
-```java
-PUT /api/packages/{id}/pickup
-```
-
-**Flow:**
-1. Employee navigates to `/pickup.html`
-2. Enters tracking number
-3. System searches for package
-4. Enters signature/verification
-5. Backend validates package exists and status is "received"
-6. Updates status to "picked"
-7. Records timestamp
-
-**Frontend:** [pickup.js](app/src/main/resources/static/assets/js/pickup.js)
-
-### UC-04: Manage Recipients ✨
-
-**File:** [RecipientController.java](app/src/main/java/com/boxsender/recipients/RecipientController.java)
-
-**Endpoints:**
-```java
-GET    /api/recipients       // Get all recipients
-GET    /api/recipients/{id}  // Get specific recipient
-POST   /api/recipients       // Create recipient
-PUT    /api/recipients/{id}  // Update recipient
-DELETE /api/recipients/{id}  // Delete recipient
-```
-
-**Features:**
-- View all recipients in system
-- Add new recipients manually
-- Update recipient information (name, email, department)
-- Delete recipients (with validation)
-
-### UC-05: Search Packages ✨
-
-**File:** [PackageController.java](app/src/main/java/com/boxsender/packages/PackageController.java)
-
-**Endpoints:**
-```java
-GET /api/packages/search?trackingNumber=...
-GET /api/packages/search?recipientEmail=...
-GET /api/packages/search?status=received
-GET /api/packages              // Get all packages
-```
-
-**Features:**
-- Search by tracking number (partial match)
-- Search by recipient email (partial match)
-- Filter by status (received/picked)
-- Real-time search with 300ms debouncing
-- Display results in sortable table
-
-**Frontend:** [search.js](app/src/main/resources/static/assets/js/search.js)
-
-### UC-06: Generate Reports ✨
-
-**Files:**
-- [ReportController.java](app/src/main/java/com/boxsender/reports/ReportController.java)
-- [ReportService.java](app/src/main/java/com/boxsender/reports/ReportService.java)
-
-**Endpoints:**
-```java
-POST /api/reports/daily?date=2025-10-31      // Daily log
-POST /api/reports/overdue?days=7             // Overdue packages
-POST /api/reports/recipient?email=...        // Recipient history
-POST /api/reports/summary                    // System summary
-GET  /api/reports                            // List all reports
-GET  /api/reports/{id}                       // View specific report
-```
-
-**Report Types:**
-
-1. **Daily Log:** All packages logged on a specific date
-2. **Overdue Packages:** Packages in "received" status older than X days
-3. **Recipient History:** All packages for a specific recipient
-4. **Summary Statistics:** Overall system stats (total packages, pickup rate, etc.)
-
-**Format:** Reports are stored as CSV-style text in the database
-
-### UC-07: Logout
-
-**Endpoint:**
-```java
-POST /api/auth/logout
-```
-
-## API Endpoints
-
-### Complete API Reference
-
-#### Authentication
-
-| Method | Endpoint | Description | Auth | Request Body |
-|--------|----------|-------------|------|--------------|
-| POST | `/api/auth/register` | Register employee | No | `{firstName, lastName, email, password}` |
-| POST | `/api/auth/login` | Login employee | No | `{email, password}` |
-| GET | `/api/auth/me` | Get current user | Yes | - |
-| POST | `/api/auth/logout` | Logout | No | - |
-
-#### Packages
-
-| Method | Endpoint | Description | Auth | Request Body |
-|--------|----------|-------------|------|--------------|
-| POST | `/api/packages` | Log new package (auto-generates pickup code) 🔐 | Yes | `{trackingNumber, carrier, description, recipientFirst, recipientLast, recipientEmail}` |
-| GET | `/api/packages` | Get all packages | Yes | - |
-| GET | `/api/packages/search` | Advanced search with sorting | Yes | Query params: `trackingNumber`, `carrier`, `description`, `recipientFirstName`, `recipientLastName`, `recipientEmail`, `status`, `sortBy`, `sortOrder` |
-| PUT | `/api/packages/{id}/pickup` | Mark as picked up (requires valid pickup code) 🔐 | Yes | `{signature, notes, pickupCode}` |
-
-#### Recipients
-
-| Method | Endpoint | Description | Auth | Request Body |
-|--------|----------|-------------|------|--------------|
-| GET | `/api/recipients` | Get all recipients | Yes | - |
-| GET | `/api/recipients/{id}` | Get recipient | Yes | - |
-| POST | `/api/recipients` | Create recipient | Yes | `{firstName, lastName, email, department}` |
-| PUT | `/api/recipients/{id}` | Update recipient | Yes | `{firstName, lastName, email, department}` |
-| DELETE | `/api/recipients/{id}` | Delete recipient | Yes | - |
-
-#### Reports
-
-| Method | Endpoint | Description | Auth | Query Params |
-|--------|----------|-------------|------|--------------|
-| POST | `/api/reports/daily` | Generate daily log | Yes | `date` (YYYY-MM-DD) |
-| POST | `/api/reports/overdue` | Generate overdue report | Yes | `days` (default: 7) |
-| POST | `/api/reports/recipient` | Generate recipient history | Yes | `email` (required) |
-| POST | `/api/reports/summary` | Generate summary | Yes | - |
-| GET | `/api/reports` | List all reports | Yes | - |
-| GET | `/api/reports/{id}` | View report | Yes | - |
-
-#### Dashboard
-
-| Method | Endpoint | Description | Auth | Returns |
-|--------|----------|-------------|------|---------|
-| GET | `/api/dashboard/stats` | Get statistics | Yes | `{totalPackages, pendingPickups, pickedUpToday, overduePackages, totalRecipients, pickupRate}` |
-| GET | `/api/dashboard/recent` | Get recent packages | Yes | Array of 20 most recent packages |
-| GET | `/api/dashboard/overdue` | Get overdue packages | Yes | Array of packages >7 days old |
-
-### Example Requests
-
-**Log a Package (Returns pickup code):**
-```bash
-curl -X POST http://localhost:8080/api/packages \
-  -H "Content-Type: application/json" \
-  -b cookies.txt \
-  -d '{
-    "trackingNumber": "1Z999AA10123456784",
-    "carrier": "UPS",
-    "description": "Small box",
-    "recipientFirst": "Jane",
-    "recipientLast": "Smith",
-    "recipientEmail": "jane.smith@example.com"
-  }'
-
-# Response includes:
-# {
-#   "id": 123,
-#   "trackingNumber": "1Z999AA10123456784",
-#   "status": "received",
-#   "pickupCode": "A7K2M9",
-#   "recipientEmail": "jane.smith@example.com",
-#   "emailSent": true,
-#   "message": "Package logged successfully! Pickup code email sent to jane.smith@example.com"
-# }
-```
-
-**Search Packages (Advanced with sorting):**
-```bash
-# Search by carrier and sort by date
-curl -X GET "http://localhost:8080/api/packages/search?carrier=UPS&sortBy=createdAt&sortOrder=desc" \
-  -b cookies.txt
-
-# Search by recipient name
-curl -X GET "http://localhost:8080/api/packages/search?recipientFirstName=Jane&sortBy=trackingNumber&sortOrder=asc" \
-  -b cookies.txt
-
-# Filter by status
-curl -X GET "http://localhost:8080/api/packages/search?status=received" \
-  -b cookies.txt
-```
-
-**Mark Package as Picked Up (Requires pickup code):**
-```bash
-curl -X PUT http://localhost:8080/api/packages/1/pickup \
-  -H "Content-Type: application/json" \
-  -b cookies.txt \
-  -d '{
-    "signature": "John Doe",
-    "notes": "Photo ID verified",
-    "pickupCode": "A7K2M9"
-  }'
-
-# Error response if code is wrong:
-# {"error": "Invalid pickup code. Please check the code sent to the recipient."}
-```
-
-**Generate Daily Report:**
-```bash
-curl -X POST "http://localhost:8080/api/reports/daily?date=2025-10-31" \
-  -b cookies.txt
-```
-
-## Database Schema
-
-### Complete Database Tables
-
-**employees**
-```sql
-CREATE TABLE employees (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  email VARCHAR(200) UNIQUE NOT NULL,
-  password_hash VARCHAR(225) NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
-**recipients**
-```sql
-CREATE TABLE recipients (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  first_name VARCHAR(45) NOT NULL,
-  last_name VARCHAR(45) NOT NULL,
-  email VARCHAR(225) UNIQUE NOT NULL,
-  department VARCHAR(120),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_email (email)
-);
-```
-
-**packages**
-```sql
-CREATE TABLE packages (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  tracking_number VARCHAR(50) UNIQUE NOT NULL,
-  carrier VARCHAR(45) NOT NULL,
-  description TEXT,
-  status ENUM('received', 'picked') DEFAULT 'received' NOT NULL,
-  pickup_code VARCHAR(10),  -- 🔐 6-character verification code (e.g., "A7K2M9")
-  recipient_id INT NOT NULL,
-  employee_id INT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (recipient_id) REFERENCES recipients(id),
-  FOREIGN KEY (employee_id) REFERENCES employees(id),
-  INDEX idx_status (status),
-  INDEX idx_pickup_code (pickup_code),  -- 🔐 Fast code lookup
-  INDEX idx_created_at (created_at),
-  INDEX idx_updated_at (updated_at),
-  INDEX idx_status_created (status, created_at)
-);
-```
-
-**reports**
-```sql
-CREATE TABLE reports (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  report_type VARCHAR(50) NOT NULL,
-  title VARCHAR(200) NOT NULL,
-  generated_date DATETIME NOT NULL,
-  generated_by INT NOT NULL,
-  report_data TEXT,
-  date_range VARCHAR(100),
-  record_count INT,
-  FOREIGN KEY (generated_by) REFERENCES employees(id),
-  INDEX idx_report_type (report_type),
-  INDEX idx_generated_date (generated_date)
-);
-```
-
-**activity_log** (optional - for audit trail)
-```sql
-CREATE TABLE activity_log (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  package_id INT NOT NULL,
-  employee_id INT,
-  action ENUM('RECEIVED', 'PICKED_UP') NOT NULL,
-  detail TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
-);
-```
-
-**notifications** (optional - email history)
-```sql
-CREATE TABLE notifications (
-  package_id INT NOT NULL,
-  recipient_id INT NOT NULL,
-  message TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (package_id, recipient_id),
-  FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE,
-  FOREIGN KEY (recipient_id) REFERENCES recipients(id) ON DELETE CASCADE
-);
-```
-
-### Entity Relationships
-
-```
-Employee (1) ──── logs ────────> (*) Package
-Recipient (1) ──── receives ───> (*) Package
-Employee (1) ──── generates ──-> (*) Report
-Package (1) ──── tracked by ──-> (*) Activity_Log
-```
-
-### Performance Optimizations
-
-The database includes **10+ indexes** for optimal query performance:
-
-1. **UNIQUE indexes** - Prevent duplicates (tracking_number, email)
-2. **Search indexes** - Fast lookups (recipient email, package status)
-3. **Date indexes** - Quick date-based queries (created_at, updated_at)
-4. **Composite indexes** - Optimize complex queries (status + created_at)
-
-**Result:** Search queries execute in milliseconds even with thousands of records.
-
-## Security
-
-### Authentication & Authorization
-
-**File:** [SecurityConfig.java](app/src/main/java/com/boxsender/config/SecurityConfig.java)
-
-1. **Password Security**
-   - BCrypt hashing with 10 rounds (automatic salt generation)
-   - Passwords NEVER stored in plain text
-   - Hash example: `$2a$10$jhk83FuD5oMJW9DpEDZJ1...`
-
-2. **Session Management**
-   - Server-side sessions (not JWT)
-   - HTTPOnly cookies (JavaScript cannot access)
-   - Session timeout after inactivity
-   - Secure cookie flag in production
-
-3. **Authentication Provider**
-   - Spring Security DaoAuthenticationProvider
-   - Custom UserDetailsService for employee lookup
-   - Automatic session creation on successful login
-
-4. **Authorization**
-   - Role-based access control (USER role for all employees)
-   - Protected endpoints require authentication
-   - Public endpoints: login, register, static assets
-
-### URL Security Configuration
-
-**Public URLs** (No authentication required):
-- `/` - Home page
-- `/index.html` - Login/registration
-- `/assets/**` - CSS, JavaScript, images
-- `/api/auth/register` - Registration endpoint
-- `/api/auth/login` - Login endpoint
-
-**Protected URLs** (Authentication required):
-- `/dashboard.html` - Dashboard
-- `/log.html` - Package logging
-- `/pickup.html` - Package pickup
-- `/search.html` - Package search
-- `/api/packages/**` - All package operations
-- `/api/recipients/**` - Recipient management
-- `/api/reports/**` - Report generation
-- `/api/dashboard/**` - Dashboard statistics
-
-### 🔐 Pickup Code Security (New Feature)
-
-**File:** [PackageController.java](app/src/main/java/com/boxsender/packages/PackageController.java:327-334)
-
-1. **Code Generation**
-   - Cryptographically secure random generation using `SecureRandom`
-   - 6-character alphanumeric codes (e.g., "A7K2M9")
-   - Excludes confusing characters (0, O, I, 1) for clarity
-   - Character set: `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`
-
-2. **Verification Process**
-   - Code required during package pickup
-   - Case-insensitive validation
-   - Prevents unauthorized package collection
-   - Ensures only recipient or authorized person can pick up
-
-3. **Email Delivery**
-   - Code sent automatically in notification email
-   - Displayed prominently in large green box
-   - Warning message emphasizes importance
-   - Employee notified if email delivery fails
-
-4. **Security Benefits**
-   - **Identity Verification:** Confirms recipient has email access
-   - **Unauthorized Access Prevention:** Wrong code rejects pickup
-   - **Audit Trail:** Pickup attempts tracked with codes
-   - **Simple UX:** Easy to remember, show on phone, or write down
-
-### XSS Protection
-
-All user input is escaped before rendering:
-- HTML escaping in email templates
-- JavaScript `escapeHtml()` function in frontend
-- Prevents cross-site scripting attacks
-
-### SQL Injection Protection
-
-- JPA parameterized queries (no raw SQL)
-- Spring Data repository methods
-- Automatic SQL escaping by Hibernate
-
-## Development Guide
-
-### Local Development Setup
-
-1. **IDE Setup**
-   - Import as Maven project
-   - Set Java 17 as project SDK
-   - Enable annotation processing
-   - Install Spring Boot extension (optional)
-
-2. **Database Development Mode**
-
-   For quick development, use H2 in-memory database:
-   ```properties
-   # Comment out MySQL and add:
-   spring.datasource.url=jdbc:h2:mem:testdb
-   spring.datasource.driver-class-name=org.h2.Driver
-   spring.jpa.hibernate.ddl-auto=create-drop
-   ```
-
-   Access H2 console: `http://localhost:8080/h2-console`
-
-3. **Hot Reload**
-
-   Add Spring Boot DevTools for automatic restart:
-   ```xml
-   <dependency>
-       <groupId>org.springframework.boot</groupId>
-       <artifactId>spring-boot-devtools</artifactId>
-       <optional>true</optional>
-   </dependency>
-   ```
-
-### Common Development Tasks
-
-**Add a new API endpoint:**
-```java
-// 1. Add to appropriate controller
-@GetMapping("/my-endpoint")
-public ResponseEntity<?> myEndpoint(Authentication auth) {
-    // Implementation
-    return ResponseEntity.ok(data);
-}
-
-// 2. Update SecurityConfig if endpoint should be public
-.requestMatchers("/api/my-endpoint").permitAll()
-```
-
-**Add a new database field:**
-```java
-// 1. Add field to entity
-@Column(name = "new_field")
-private String newField;
-
-// 2. Add getter/setter
-public String getNewField() { return newField; }
-public void setNewField(String newField) { this.newField = newField; }
-
-// 3. JPA will auto-update schema (or write migration script)
-```
-
-**Add a new repository query method:**
-```java
-// Spring Data JPA generates query from method name
-List<Package> findByStatusAndCreatedAtAfter(String status, LocalDateTime date);
-
-// Or use @Query for custom JPQL
-@Query("SELECT p FROM Package p WHERE p.status = :status")
-List<Package> findPackagesByStatus(@Param("status") String status);
-```
-
-### Debugging Tips
-
-**Enable SQL logging:**
-```properties
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
-logging.level.org.hibernate.SQL=DEBUG
-logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
-```
-
-**Check authentication:**
-```java
-Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-System.out.println("User: " + auth.getName());
-System.out.println("Roles: " + auth.getAuthorities());
-```
-
-**Test email without sending:**
-```java
-// In EmailService.java, comment out:
-// mailSender.send(message);
-System.out.println("Email would be sent to: " + recipientEmail);
-```
-
-## Testing
-
-### Manual Testing Checklist
-
-#### Authentication Flow
-- [ ] Register new employee account
-- [ ] Login with correct credentials
-- [ ] Login fails with wrong password
-- [ ] Password is hashed in database (starts with `$2a$`)
-- [ ] Logout successfully clears session
-- [ ] Protected pages redirect to login when not authenticated
-
-#### Package Logging
-- [ ] Log package with all required fields
-- [ ] Email notification is sent to recipient
-- [ ] Duplicate tracking number is rejected
-- [ ] New recipient is created automatically
-- [ ] Existing recipient is reused correctly
-- [ ] Package appears on dashboard immediately
-
-#### Package Pickup
-- [ ] Search for package by tracking number
-- [ ] Mark package as picked up
-- [ ] Status changes from "received" to "picked"
-- [ ] Cannot pick up already-picked package
-- [ ] Timestamp is recorded correctly
-
-#### Package Search
-- [ ] Search by full tracking number
-- [ ] Search by partial tracking number
-- [ ] Search by recipient email
-- [ ] Filter by status (received/picked)
-- [ ] Results display correctly in table
-- [ ] No results shows appropriate message
-
-#### Reports
-- [ ] Generate daily report for today
-- [ ] Generate daily report for specific date
-- [ ] Generate overdue report (>7 days)
-- [ ] Generate recipient history report
-- [ ] Generate summary statistics report
-- [ ] View generated report details
-
-#### Dashboard
-- [ ] Recent packages load automatically
-- [ ] Statistics display correctly
-- [ ] Auto-refresh works (wait 30-60 seconds)
-- [ ] User's first name displays in greeting
-
-### Unit Testing
-
-Run existing tests:
-```bash
-mvn test
-```
-
-Example test structure:
-```java
-@SpringBootTest
-class PackageControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Test
-    void testLogPackage() throws Exception {
-        // Test implementation
-    }
-}
-```
-
-### API Testing with Postman
-
-1. Import API collection (create from endpoints above)
-2. Set up environment variables (baseUrl, authCookie)
-3. Test all endpoints systematically
-4. Verify response codes and data
+---
 
 ## Troubleshooting
 
-### Common Issues & Solutions
+### Problem: Admin cannot log in after role migration
 
-#### Problem: Application won't start
+**Solution:**
+Run the fix script to ensure all employees have a role:
+```bash
+mysql -u root -P 3307 -h localhost boxsender < fix_employee_roles.sql
+```
 
-**Symptoms:** Error on startup, port already in use
+Or manually:
+```sql
+UPDATE employees SET role = 'EMPLOYEE' WHERE role IS NULL OR role = '';
+UPDATE employees SET role = 'ADMIN' WHERE email = 'your-admin@example.com';
+```
+
+### Problem: "Access Denied" when trying to log package
+
+**Cause:** User has EMPLOYEE role (not authorized to log packages)
+
+**Solution:**
+- Have an admin promote you to MAILROOM_STAFF or ADMIN via Admin Panel
+- Or manually update database:
+  ```sql
+  UPDATE employees SET role = 'MAILROOM_STAFF' WHERE email = 'your-email@example.com';
+  ```
+
+### Problem: Employee sign-ins not working
+
+**Symptoms:** Login redirects back to index.html
+
+**Solution:**
+1. Ensure `role` column exists in employees table:
+   ```sql
+   DESCRIBE employees;
+   ```
+2. If missing, run:
+   ```sql
+   ALTER TABLE employees ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'EMPLOYEE';
+   ```
+3. Set role for existing employees:
+   ```sql
+   UPDATE employees SET role = 'EMPLOYEE' WHERE role IS NULL;
+   ```
+4. Restart application
+
+### Problem: Application won't start
 
 **Solutions:**
 - Check if MySQL is running: `mysql -u root -p`
-- Check if port 8080 is free: `netstat -ano | findstr :8080` (Windows)
 - Verify database exists: `SHOW DATABASES;`
-- Check application.properties for correct credentials
+- Check `application.properties` for correct credentials
+- Look for port conflicts (8080)
 
-#### Problem: Email not sending
-
-**Symptoms:** Package logs but no email received
-
-**Solutions:**
-- ✅ Verify Brevo credentials in application.properties
-- ✅ Check sender email is verified in Brevo dashboard
-- ✅ Check spam/junk folder
-- ✅ Look for errors in console: `Mail server connection failed`
-- ✅ Test SMTP manually: `telnet smtp-relay.brevo.com 587`
-- ✅ Verify environment variables are set correctly
-
-#### Problem: Login fails with correct password
-
-**Symptoms:** "Invalid credentials" error
+### Problem: Email not sending
 
 **Solutions:**
-- ✅ Check password is being hashed: `SELECT password_hash FROM employees;`
-- ✅ Verify hash starts with `$2a$`
-- ✅ Check SecurityConfig has `passwordEncoder` bean
-- ✅ Clear browser cookies and try again
-- ✅ Register new account to test fresh
-
-#### Problem: Session not persisting
-
-**Symptoms:** Logged out after page refresh
-
-**Solutions:**
-- ✅ Verify `credentials: 'include'` in all fetch calls
-- ✅ Check browser cookies are enabled
-- ✅ Look for CORS errors in browser console
-- ✅ Verify SecurityConfig session management
-
-#### Problem: Database connection fails
-
-**Symptoms:** `Communications link failure` error
-
-**Solutions:**
-- ✅ Check MySQL service is running
-- ✅ Verify connection URL: `jdbc:mysql://localhost:3306/boxsender`
-- ✅ Test credentials: `mysql -u root -p`
-- ✅ Create database: `CREATE DATABASE boxsender;`
-- ✅ Try H2 for testing: Switch to in-memory database
-
-#### Problem: Package pickup fails
-
-**Symptoms:** Error when marking package as picked
-
-**Solutions:**
-- ✅ Verify package exists with tracking number
-- ✅ Check package status is "received" not already "picked"
-- ✅ Look for errors in console logs
-- ✅ Verify `updated_at` field is being set
-
-#### Problem: Search returns no results
-
-**Symptoms:** Empty results when searching existing packages
-
-**Solutions:**
-- ✅ Check database has packages: `SELECT * FROM packages;`
-- ✅ Verify search query parameters
-- ✅ Try searching without filters first
-- ✅ Check browser console for JavaScript errors
-
-### Performance Issues
-
-If application is slow:
-- ✅ Check database indexes are created (see `database_improvements.sql`)
-- ✅ Verify MySQL query cache is enabled
-- ✅ Monitor slow queries: `SET profiling = 1; SHOW PROFILES;`
-- ✅ Increase JVM heap size: `java -Xmx1024m -jar app.jar`
-
-## Production Deployment
-
-### Pre-deployment Checklist
-
-- [ ] Change database to production instance
-- [ ] Use environment variables for all secrets
-- [ ] Enable HTTPS/SSL
-- [ ] Set `spring.jpa.hibernate.ddl-auto=validate`
-- [ ] Configure production email limits
-- [ ] Set up database backups
-- [ ] Enable proper logging (file-based)
-- [ ] Configure firewall rules
-- [ ] Set session timeout appropriately
-- [ ] Add CSRF protection if needed
-
-### Build for Production
-
-```bash
-# Build JAR file
-mvn clean package -DskipTests
-
-# Run with production profile
-java -jar target/app-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
-
-**Code Style:**
-- Follow existing code formatting
-- Add JavaDoc comments for public methods
-- Write unit tests for new features
-- Update README.md if adding new features
-
-## License
-
-This project is created for educational purposes as part of **ICS 370 - Software Design and Models** at Metropolitan State University.
-
-## Acknowledgments
-
-- **Spring Boot Team** - Excellent framework and documentation
-- **Bootstrap Team** - Responsive UI components
-- **Brevo** - Free email service for students
-- **Professor & TA** - Guidance and support
+- Verify Brevo credentials in `application.properties`
+- Check sender email is verified in Brevo dashboard
+- Check spam/junk folder
+- Look for errors in console: `Mail server connection failed`
+- Verify environment variables are set correctly
 
 ---
 
@@ -1219,20 +862,64 @@ mvn spring-boot:run
 - **Application:** http://localhost:8080
 - **Login:** http://localhost:8080/index.html
 - **Dashboard:** http://localhost:8080/dashboard.html
-- **Log Package:** http://localhost:8080/log.html
+- **Log Package:** http://localhost:8080/log.html (ADMIN/MAILROOM_STAFF only)
 - **Pickup:** http://localhost:8080/pickup.html
 - **Search:** http://localhost:8080/search.html
+- **Admin Panel:** http://localhost:8080/admin.html (ADMIN only)
 
-### Default Ports
-- **Application:** 8080
-- **MySQL:** 3306 or 3307 (as configured)
+### Default Configuration
+- **Application Port:** 8080
+- **MySQL Port:** 3307 (as configured)
+- **Default Role:** EMPLOYEE
+- **Admin Emails:** Configured in migration script or manually
 
-### Contact
+### Admin Tasks
 
-For questions or issues:
-- Open an issue in the repository
-- Contact team members via university email
-- See professor during office hours
+**Create Admin User:**
+```sql
+UPDATE employees SET role = 'ADMIN' WHERE email = 'admin@example.com';
+```
+
+**View All Roles:**
+```sql
+SELECT first_name, last_name, email, role FROM employees ORDER BY role DESC;
+```
+
+**Promote User:**
+```sql
+UPDATE employees SET role = 'MAILROOM_STAFF' WHERE email = 'user@example.com';
+```
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
+
+**Code Style:**
+- Follow existing code formatting
+- Add JavaDoc comments for public methods
+- Write unit tests for new features
+- Update README.md if adding new features
+
+---
+
+## License
+
+This project is created for educational purposes as part of **ICS 370 - Software Design and Models** at Metropolitan State University.
+
+---
+
+## Acknowledgments
+
+- **Spring Boot Team** - Excellent framework and documentation
+- **Bootstrap Team** - Responsive UI components
+- **Brevo** - Free email service for students
+- **Professor & TA** - Guidance and support
 
 ---
 
@@ -1240,4 +927,4 @@ For questions or issues:
 
 **Team:** Casey Cunningham, Tenzin Kunga, Nick Herberg, Brian Willems
 **Course:** ICS 370 - Software Design and Models
-**Date:** October 2025
+**Date:** November 2025

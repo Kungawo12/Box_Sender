@@ -135,12 +135,14 @@ async function loadEmployees() {
                     <td>${escapeHtml(emp.email)}</td>
                     <td>${roleBadge}</td>
                     <td>
-                        <select class="form-select form-select-sm" onchange="updateRole(${emp.id}, this.value, '${escapeHtml(emp.email)}')">
-                            <option value="">Change Role...</option>
-                            <option value="EMPLOYEE" ${emp.role === 'EMPLOYEE' ? 'selected' : ''}>Employee</option>
-                            <option value="MAILROOM_STAFF" ${emp.role === 'MAILROOM_STAFF' ? 'selected' : ''}>Mailroom Staff</option>
-                            <option value="ADMIN" ${emp.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
-                        </select>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary" onclick='editEmployee(${JSON.stringify(emp)})' title="Edit">
+                                Edit
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="deleteEmployee(${emp.id}, '${escapeHtml(emp.email)}')" title="Delete">
+                                Delete
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -157,53 +159,6 @@ async function loadEmployees() {
         `;
     }
 }
-
-/**
- * Update an employee's role
- * @param {number} employeeId - The employee ID
- * @param {string} newRole - The new role to assign
- * @param {string} email - The employee's email (for display)
- */
-window.updateRole = async function(employeeId, newRole, email) {
-    if (!newRole) return; // User selected "Change Role..." placeholder
-
-    const confirmed = confirm(`Are you sure you want to change ${email}'s role to ${newRole}?`);
-    if (!confirmed) {
-        loadEmployees(); // Reload to reset dropdown
-        return;
-    }
-
-    const messageBox = document.getElementById('messageBox');
-
-    try {
-        const response = await fetch(`/api/admin/employees/${employeeId}/role`, {
-            method: 'PUT',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ role: newRole })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to update role');
-        }
-
-        // Show success message
-        showMessage(`Successfully updated ${email} from ${data.oldRole} to ${data.newRole}`, 'success');
-
-        // Reload employees to reflect changes
-        loadEmployees();
-
-    } catch (error) {
-        console.error('Update role error:', error);
-        showMessage(error.message || 'Failed to update role', 'error');
-        loadEmployees(); // Reload to reset dropdown
-    }
-};
 
 /**
  * Get badge HTML for a role
@@ -244,6 +199,128 @@ function showMessage(message, type) {
         }, 5000);
     }
 }
+
+/**
+ * Open edit employee modal
+ * @param {Object} employee - The employee object to edit
+ */
+window.editEmployee = function(employee) {
+    // Populate form with employee data
+    document.getElementById('editEmployeeId').value = employee.id;
+    document.getElementById('editFirstName').value = employee.firstName;
+    document.getElementById('editLastName').value = employee.lastName;
+    document.getElementById('editEmail').value = employee.email;
+    document.getElementById('editPassword').value = ''; // Clear password field
+    document.getElementById('editRole').value = employee.role;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+    modal.show();
+};
+
+/**
+ * Save employee edit from modal
+ */
+window.saveEmployeeEdit = async function() {
+    const employeeId = document.getElementById('editEmployeeId').value;
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const lastName = document.getElementById('editLastName').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const password = document.getElementById('editPassword').value; // Can be empty
+    const role = document.getElementById('editRole').value;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !role) {
+        showMessage('Please fill in all required fields', 'error');
+        return;
+    }
+
+    // Validate password if provided
+    if (password && password.length < 6) {
+        showMessage('Password must be at least 6 characters', 'error');
+        return;
+    }
+
+    try {
+        // Build request body (only include password if provided)
+        const body = {
+            firstName,
+            lastName,
+            email,
+            role
+        };
+
+        if (password) {
+            body.password = password;
+        }
+
+        const response = await fetch(`/api/admin/employees/${employeeId}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to update employee');
+        }
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+        modal.hide();
+
+        // Show success message
+        showMessage(`Successfully updated employee: ${email}`, 'success');
+
+        // Reload employee list
+        loadEmployees();
+
+    } catch (error) {
+        console.error('Update employee error:', error);
+        showMessage(error.message || 'Failed to update employee', 'error');
+    }
+};
+
+/**
+ * Delete an employee account
+ * @param {number} employeeId - The employee ID to delete
+ * @param {string} email - The employee's email (for display)
+ */
+window.deleteEmployee = async function(employeeId, email) {
+    const confirmed = confirm(`Are you sure you want to delete the account for ${email}?\n\nThis action cannot be undone!`);
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch(`/api/admin/employees/${employeeId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to delete employee');
+        }
+
+        // Show success message
+        showMessage(`Successfully deleted account: ${email}`, 'success');
+
+        // Reload employee list
+        loadEmployees();
+
+    } catch (error) {
+        console.error('Delete employee error:', error);
+        showMessage(error.message || 'Failed to delete employee', 'error');
+    }
+};
 
 /**
  * Escape HTML to prevent XSS attacks

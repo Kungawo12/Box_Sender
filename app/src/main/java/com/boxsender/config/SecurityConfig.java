@@ -140,9 +140,12 @@ public class SecurityConfig {
       // Convert Employee to Spring Security's UserDetails format
       // Use the role from the database instead of hardcoded "USER"
       // Employee.role values: ADMIN, MAILROOM_STAFF, EMPLOYEE
+      // If role is null or empty, default to EMPLOYEE for backwards compatibility
+      String role = (e.getRole() == null || e.getRole().isEmpty()) ? "EMPLOYEE" : e.getRole();
+
       return User.withUsername(e.getEmail())  // Username is email
           .password(e.getPasswordHash())  // Password is already BCrypt hashed
-          .roles(e.getRole())  // Assign role from database (ADMIN, MAILROOM_STAFF, or EMPLOYEE)
+          .roles(role)  // Assign role from database (ADMIN, MAILROOM_STAFF, or EMPLOYEE)
           .build();
     };
   }
