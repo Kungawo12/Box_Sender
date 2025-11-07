@@ -1,4 +1,4 @@
-/**
+\/**
  * Login Page JavaScript
  *
  * Handles user authentication for the Box Sender application:
@@ -169,15 +169,15 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();  // Prevent form from submitting normally (page reload)
 
       // Validate form before submitting
-      if (!validateForm(loginForm)) return;
+        if (!validateForm(loginForm)) return;
 
       // Prepare request body with login credentials
-      const body = {
+        const body = {
         email:    loginForm.email.value.trim(),  // Remove whitespace
         password: loginForm.password.value  // Don't trim passwords (might be intentional)
-      };
+        };
 
-      try {
+        try {
         // Send login request to server
         await apiPost('/api/auth/login', body);
 
@@ -216,24 +216,24 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();  // Prevent default form submission
 
       // Custom validation: Check if passwords match
-      const p1 = document.getElementById('regPassword');
-      const p2 = document.getElementById('regPassword2');
+        const p1 = document.getElementById('regPassword');
+        const p2 = document.getElementById('regPassword2');
       // setCustomValidity() sets custom error message
       // Empty string '' means field is valid
-      p2.setCustomValidity(p1.value !== p2.value ? 'Passwords do not match' : '');
+        p2.setCustomValidity(p1.value !== p2.value ? 'Passwords do not match' : '');
 
       // Validate entire form (including custom password match validation)
-      if (!validateForm(regForm)) return;
+        if (!validateForm(regForm)) return;
 
       // Prepare registration data
-      const body = {
+        const body = {
         firstName: regForm.firstName.value.trim(),
         lastName:  regForm.lastName.value.trim(),
         email:     regForm.email.value.trim(),
         password:  regForm.password.value  // Don't trim password
-      };
+    };
 
-      try {
+    try {
         // Send registration request
         // Server registers AND auto-logs in user
         await apiPost('/api/auth/register', body);
@@ -241,10 +241,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // On success, redirect to dashboard
         // User is already logged in thanks to auto-login feature
         window.location.replace('/dashboard.html');
-      } catch (err) {
+    } catch (err) {
         // On failure, show error and switch back to sign in view
         alert(err.message);
         showView('signin');
-      }
+    }
     });
 });

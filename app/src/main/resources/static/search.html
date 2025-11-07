@@ -9,104 +9,104 @@
 </head>
 <body>
   <nav class="navbar bg-primary" data-bs-theme="dark">
-    <div class="container container-narrow d-flex align-items-center">
+    <div class="container d-flex align-items-center">
       <a class="navbar-brand" href="/dashboard.html">Box Sender</a>
       <div class="ms-auto d-flex gap-2">
         <a class="btn btn-light btn-sm" href="/pickup.html">Pickup</a>
+        <a class="btn btn-light btn-sm" href="/log.html">Log Package</a>
         <form method="post" action="/logout" class="m-0">
-          <button type="submit" class="btn btn-light btn-sm">Sign out</button>
+          <button type="submit" class="btn btn-outline-light btn-sm">Sign out</button>
         </form>
       </div>
     </div>
   </nav>
 
-  <main class="container container-narrow py-4">
-    <div class="card p-3">
-      <h5 class="mb-3 text-dark">Search Packages</h5>
+  <main class="container py-4">
+    <div class="card shadow">
+      <div class="card-body">
+        <h3 class="card-title mb-4">Search Packages</h3>
+        
+        <!-- THREE FILTER BOXES -->
+        <div class="row g-3 mb-4">
+          <!-- Tracking Number Filter -->
+          <div class="col-md-4">
+            <label class="form-label" for="trackingFilter">
+              Tracking Number
+            </label>
+            <input 
+              id="trackingFilter" 
+              class="form-control" 
+              placeholder="e.g., ABC123"
+            />
+            <small class="text-muted">Leave empty to show all</small>
+          </div>
 
-      <!-- Search Filters -->
-      <div class="row g-2 mb-3">
-        <div class="col-md-6">
-          <label class="form-label" for="trackingNumber">Tracking Number</label>
-          <input id="trackingNumber" class="form-control" placeholder="Search by tracking number..." />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="carrier">Carrier</label>
-          <input id="carrier" class="form-control" placeholder="UPS, FedEx, USPS, DHL..." />
-        </div>
-      </div>
+          <!-- Recipient Name Filter -->
+          <div class="col-md-4">
+            <label class="form-label" for="recipientFilter">
+              Recipient Name
+            </label>
+            <input 
+              id="recipientFilter" 
+              class="form-control" 
+              placeholder="e.g., John Doe"
+            />
+            <small class="text-muted">First or last name</small>
+          </div>
 
-      <div class="row g-2 mb-3">
-        <div class="col-md-6">
-          <label class="form-label" for="recipientName">Recipient Name</label>
-          <input id="recipientName" class="form-control" placeholder="First or last name..." />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="recipientEmail">Recipient Email</label>
-          <input id="recipientEmail" class="form-control" placeholder="Search by email..." />
-        </div>
-      </div>
-
-      <div class="row g-2 mb-3">
-        <div class="col-md-4">
-          <label class="form-label" for="description">Description</label>
-          <input id="description" class="form-control" placeholder="Package description..." />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="status">Status</label>
-          <select id="status" class="form-select">
-            <option value="">All Statuses</option>
-            <option value="received">Waiting for Pickup</option>
-            <option value="picked">Picked Up</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="sortBy">Sort By</label>
-          <div class="input-group">
-            <select id="sortBy" class="form-select">
-              <option value="createdAt">Date Logged</option>
-              <option value="trackingNumber">Tracking Number</option>
-              <option value="carrier">Carrier</option>
-              <option value="status">Status</option>
-              <option value="updatedAt">Last Updated</option>
+          <!-- Status Filter -->
+          <div class="col-md-4">
+            <label class="form-label" for="statusFilter">
+              Status
+            </label>
+            <select id="statusFilter" class="form-select">
+              <option value="all">All Statuses</option>
+              <option value="received">Received (Ready for Pickup)</option>
+              <option value="picked_up">Picked Up</option>
             </select>
-            <button id="sortOrderBtn" class="btn btn-outline-secondary" type="button" title="Toggle sort order">
-              <span id="sortOrderIcon">↓</span>
-            </button>
           </div>
         </div>
-      </div>
 
-      <div class="d-flex gap-2 mb-3 flex-wrap">
-        <button id="applyBtn" class="btn btn-primary">Apply Filters</button>
-        <button id="clearBtn" class="btn btn-secondary">Clear Filters</button>
-        <button onclick="exportToCSV()" class="btn btn-success">Export CSV</button>
-        <button onclick="exportToPDF()" class="btn btn-info">Export PDF</button>
-        <div class="ms-auto">
-          <small class="text-muted">Found: <span id="resultCount">0</span> packages</small>
+        <!-- Search Button -->
+        <div class="d-flex gap-2 mb-4">
+          <button id="searchBtn" class="btn btn-primary">
+            Search Packages
+          </button>
+          <button id="clearBtn" class="btn btn-secondary">
+            Clear Filters
+          </button>
         </div>
-      </div>
 
-      <!-- Results Table -->
-      <div class="table-responsive" style="max-height:500px; overflow-y: auto;">
-        <table class="table table-sm table-hover">
-          <thead class="sticky-top bg-white">
-            <tr>
-              <th>Tracking #</th>
-              <th>Carrier</th>
-              <th>Description</th>
-              <th>Recipient</th>
-              <th>Status</th>
-              <th>Logged At</th>
-              <th>Pickup At</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+        <!-- Results Count -->
+        <div id="resultCount" class="mb-2 text-muted"></div>
+
+        <!-- Results Table -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Tracking #</th>
+                <th>Carrier</th>
+                <th>Recipient</th>
+                <th>Status</th>
+                <th>Logged At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  Enter your search filters above and click "Search Packages"
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
 
+  <script src="/assets/js/api.js"></script>
   <script src="/assets/js/search.js"></script>
 </body>
 </html>
