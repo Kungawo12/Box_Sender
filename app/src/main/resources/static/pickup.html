@@ -9,43 +9,90 @@
 </head>
 <body>
   <nav class="navbar bg-primary" data-bs-theme="dark">
-    <div class="container container-narrow d-flex align-items-center">
-      <a class="navbar-brand" href="/dashboard.html">Box Sender</a>
+    <div class="container d-flex align-items-center">
+      <a class="navbar-brand" href="/dashboard.html"> Box Sender</a>
       <div class="ms-auto d-flex gap-2">
-        <a class="btn btn-light btn-sm" href="/search.html">Search</a>
+        <a class="btn btn-light btn-sm" href="/search.html"> Search</a>
+        <a class="btn btn-light btn-sm" href="/log.html"> Log Package</a>
         <form method="post" action="/logout" class="m-0">
-          <button type="submit" class="btn btn-light btn-sm">Sign out</button>
+          <button type="submit" class="btn btn-outline-light btn-sm">Sign out</button>
         </form>
       </div>
     </div>
   </nav>
 
-  <main class="container  p-5 m-5">
-    <div class="card p-5 m-5">
-      <h5 class="mb-2">Pickup Package</h5>
-      <form id="pickupForm">
-        <div class="row g-2">
-            <label class="form-label" for="pt">Tracking Number *</label>
-            <input id="pt" class="form-control" required />
-          
-            <label class="form-label" for="pc">Pickup Code *</label>
-            <input id="pc" class="form-control" required />
-          
-            <label class="form-label" for="pb">Picked up by</label>
-            <input id="pb" class="form-control" />
-          
-            <label class="form-label" for="ps">Staff (optional)</label>
-            <input id="ps" class="form-control" />
-          
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow">
+          <div class="card-body p-4">
+            <h3 class="card-title mb-4">Package Pickup</h3>
+
+            <form id="pickupForm">
+              <div class="mb-3">
+                <label class="form-label" for="trackingNumber">
+                  Tracking Number *
+                </label>
+                <input 
+                  id="trackingNumber" 
+                  name="trackingNumber"
+                  class="form-control" 
+                  placeholder="Enter tracking number"
+                  required 
+                  readonly
+                />
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label" for="pickedUpBy">
+                   Your Full Name *
+                </label>
+                <input 
+                  id="pickedUpBy"
+                  name="pickedUpBy" 
+                  class="form-control" 
+                  placeholder="e.g., John Doe"
+                  required
+                  readonly
+                />
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label" for="signature">
+                  Signature (Type your name) *
+                </label>
+                <input 
+                  id="signature"
+                  name="signature" 
+                  class="form-control form-control-lg"
+                  placeholder="Type your full name as signature"
+                  required
+                  style="font-family: 'Brush Script MT', cursive; font-size: 24px;"
+                  autofocus
+                />
+                <small class="text-muted">
+                  By typing your name, you confirm receipt of this package
+                </small>
+              </div>
+              
+              <div class="d-grid gap-2"></div>
+              <button class="btn btn-success w-100 btn-lg" type="submit">
+                Confirm Pickup
+              </button>
+              </a>
+            </div>
+            </form>
+
+            <!-- Message area -->
+            <div id="messageArea" class="mt-3"></div>
+          </div>
         </div>
-        <div class="mt-3">
-          <button class="btn btn-success" type="submit">Mark Picked Up</button>
-        </div>
-      </form>
-      <p id="msg" class="small-muted mt-2"></p>
+
+      </div>
     </div>
   </main>
 
-
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/pickup.js"></script>
 </body>
 </html>

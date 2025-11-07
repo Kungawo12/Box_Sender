@@ -6,10 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,77 +17,61 @@ import com.boxsender.users.Employee;
 import com.boxsender.users.EmployeeRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  private final EmployeeRepository repo;
-  private final PasswordEncoder encoder;
-  private final AuthenticationManager authManager;
+    private final AuthenticationManager authenticationManager;
+    private final EmployeeRepository employeeRepo;
 
-  public AuthController(EmployeeRepository repo, PasswordEncoder encoder, AuthenticationManager authManager) {
-    this.repo = repo;
-    this.encoder = encoder;
-    this.authManager = authManager;
-  }
-
-  @org.springframework.web.bind.annotation.GetMapping("/me")
-public Map<String, Object> me(Authentication auth) {
-  // auth.getName() is the email of the logged-in user
-  var emp = repo.findByEmail(auth.getName()).orElseThrow();
-  return Map.of(
-      "firstName", emp.getFirstName(),
-      "lastName",  emp.getLastName(),
-      "email",     emp.getEmail()
-  );
-  }
-
-  // Register -> save user -> immediately log them in -
-  @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody RegisterRequest body, HttpServletRequest request) {
-    if (repo.findByEmail(body.email()).isPresent()) {
-      return ResponseEntity.badRequest().body("Email already used");
+    public AuthController(AuthenticationManager authenticationManager,
+                         EmployeeRepository employeeRepo) {
+        this.authenticationManager = authenticationManager;
+        this.employeeRepo = employeeRepo;
     }
-    Employee e = new Employee();
-    e.setFirstName(body.firstName());
-    e.setLastName(body.lastName());
-    e.setEmail(body.email());
-    e.setPasswordHash(encoder.encode(body.password())); // BCrypt!
-    repo.save(e);
 
-    // auto-login after register
-    Authentication loginReq = UsernamePasswordAuthenticationToken.unauthenticated(body.email(), body.password());
-    Authentication auth = authManager.authenticate(loginReq);
-    saveInSession(auth, request);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+            );
 
-    return ResponseEntity.ok().build();
-  }
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            HttpSession session = httpRequest.getSession(true);
+            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
-  // Login -> authenticate -> save in session -> 200 OK
-  @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequest body, HttpServletRequest request) {
-    Authentication loginReq = UsernamePasswordAuthenticationToken.unauthenticated(body.email(), body.password());
-    Authentication auth = authManager.authenticate(loginReq);
-    saveInSession(auth, request);
-    return ResponseEntity.ok().build();
-  }
+            Employee employee = employeeRepo.findByEmail(request.email())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-  // Logout -> clear session -> 200 OK
-  @PostMapping("/logout")
-  public ResponseEntity<?> logout(HttpServletRequest request) {
-    request.getSession().invalidate();
-    SecurityContextHolder.clearContext();
-    return ResponseEntity.ok().build();
-  }
+            return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "firstName", employee.getFirstName(),
+                "email", employee.getEmail()
+            ));
 
-  private void saveInSession(Authentication auth, HttpServletRequest request) {
-    SecurityContext context = SecurityContextHolder.createEmptyContext();
-    context.setAuthentication(auth);
-    request.getSession(true).setAttribute(
-        HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-  }
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        }
+    }
 
-  public record RegisterRequest(String firstName, String lastName, String email, String password) {}
-  public record LoginRequest(String email, String password) {}
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+
+        Employee employee = employeeRepo.findByEmail(auth.getName())
+            .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        return ResponseEntity.ok(Map.of(
+            "firstName", employee.getFirstName(),
+            "lastName", employee.getLastName(),
+            "email", employee.getEmail()
+        ));
+    }
+
+    public record LoginRequest(String email, String password) {}
 }
