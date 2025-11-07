@@ -1,4 +1,4 @@
-/**
+\/**
  * Login Page JavaScript
  *
  * Handles user authentication for the Box Sender application:
