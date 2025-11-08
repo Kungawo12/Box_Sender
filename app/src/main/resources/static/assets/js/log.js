@@ -1,4 +1,4 @@
-console.log('🚀 log.js is loading...');
+console.log('log.js is loading...');
 
 // Wait for DOM to be ready before attaching form handler
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,55 +23,25 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error('Recipient info is required');
 
         const data = await api('POST', '/api/packages', {
-            trackingNumber,
-            carrier,
+            trackingNumber, 
+            carrier, 
             description,
-            recipientEmail,
+            recipientEmail, 
             recipientFirst,
             recipientLast
         });
-
-        // Build success message with pickup code and email confirmation
+        
+        
         const box = document.getElementById('logResult');
-
-        // Email status styling
-        const emailIcon = data?.emailSent ? '✉️' : '⚠️';
-        const emailClass = data?.emailSent ? 'text-success' : 'text-warning';
-
-        const msg = `
-            <div class="alert alert-success">
-                <h5 class="alert-heading">✅ Package Logged Successfully!</h5>
-                <hr>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p class="mb-1"><strong>Tracking Number:</strong></p>
-                        <p class="mb-2" style="font-size: 1.1rem;">${trackingNumber}</p>
-
-                        <p class="mb-1"><strong>Recipient:</strong></p>
-                        <p class="mb-2">${recipientFirst} ${recipientLast}</p>
-
-                        <p class="mb-1"><strong>Email:</strong></p>
-                        <p class="mb-2">${recipientEmail}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="mb-1"><strong>Pickup Code:</strong></p>
-                        <div class="bg-success text-white p-3 rounded text-center mb-3" style="font-size: 1.5rem; letter-spacing: 3px; font-family: 'Courier New', monospace;">
-                            ${data?.pickupCode || 'N/A'}
-                        </div>
-
-                        <p class="${emailClass} mb-0">
-                            <strong>${emailIcon} ${data?.message || 'Package logged'}</strong>
-                        </p>
-                    </div>
-                </div>
-                ${!data?.emailSent ? '<div class="alert alert-warning mt-3 mb-0"><small>⚠️ Email failed to send. Please inform recipient of pickup code: <strong>' + (data?.pickupCode || '') + '</strong></small></div>' : ''}
-            </div>
-        `;
-
+        const msg = ` Package logged successfully!<br>
+                     <strong>Tracking:</strong> ${trackingNumber}<br>
+                     <strong>Status:</strong> ${data?.status || 'received'}<br>
+                     <strong>Recipient:</strong> ${recipientFirst} ${recipientLast}`;
+        
         if (box) {
-            box.innerHTML = msg;
+            box.innerHTML = `<div class="alert alert-success">${msg}</div>`; 
         } else {
-            alert('Package logged! Pickup code: ' + (data?.pickupCode || 'N/A'));
+            alert(msg);
         }
 
         form.reset();
