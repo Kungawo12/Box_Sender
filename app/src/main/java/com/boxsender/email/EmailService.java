@@ -51,8 +51,8 @@ public class EmailService {
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
                 "    <style>\n" +
-                "        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }\n" +
-                "        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }\n" +
+                "        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; text-align: center; }\n" +
+                "        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; text-align: left; }\n" +
                 "        .header { background: linear-gradient(135deg, #0a0f1e, #1a2747); color: white; padding: 40px 20px; text-align: center; }\n" +
                 "        .header h1 { margin: 0; font-size: 28px; }\n" +
                 "        .content { padding: 30px 20px; }\n" +
