@@ -56,7 +56,7 @@ public class EmailService {
                 "        .header { background: linear-gradient(135deg, #0a0f1e, #1a2747); color: white; padding: 40px 20px; text-align: center; }\n" +
                 "        .header h1 { margin: 0; font-size: 28px; }\n" +
                 "        .content { padding: 30px 20px; }\n" +
-                "        .tracking-box { background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; margin: 25px 0; border-radius: 8px; letter-spacing: 1px; }\n" +
+                "        .tracking-box { background-color: #007bff; background: linear-gradient(135deg, #007bff, #0056b3); color: #ffffff; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; margin: 25px 0; border-radius: 8px; letter-spacing: 1px; }\n" +
                 "        .instructions { background: #e8f4f8; padding: 15px; border-radius: 4px; margin: 20px 0; }\n" +
                 "        .footer { background: #f9fafb; text-align: center; color: #888; font-size: 12px; padding: 20px; }\n" +
                 "    </style>\n" +
@@ -68,7 +68,7 @@ public class EmailService {
                 "            <p>Hi <strong>" + escapedName + "</strong>,</p>\n" +
                 "            <p>Your package has been received at our mailroom and is ready for pickup!</p>\n" +
                 "            <p><strong>Your Tracking Number:</strong></p>\n" +
-                "            <div class=\"tracking-box\">" + escapedTracking + "</div>\n" +
+                "            <div class=\"tracking-box\" style=\"background-color: #007bff; color: #ffffff; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; margin: 25px 0; border-radius: 8px; letter-spacing: 1px;\">" + escapedTracking + "</div>\n" +
                 "            <div class=\"instructions\">\n" +
                 "                <h3 style=\"margin-top: 0;\">How to Pick Up:</h3>\n" +
                 "                <ol>\n" +
