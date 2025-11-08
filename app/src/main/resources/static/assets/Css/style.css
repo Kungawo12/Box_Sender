@@ -74,7 +74,12 @@ footer { color:var(--muted); }
 a, .nav-link{ color:#cfe1ff }
 a:hover{ color:#ffffff }
 .form-control, .form-select{
-  background-color:#0f1730; color:var(--text);
+  background-color:#0f1730; color:#ffffff;
   border:1px solid rgba(255,255,255,.15);
 }
+.form-control:focus, .form-select:focus{
+  background-color:#0f1730; color:#ffffff;
+  border-color: rgba(255,255,255,.35);
+}
 .form-control::placeholder{ color:#7c86a9 }
+.form-select option{ background-color:#0f1730; color:#ffffff; }
