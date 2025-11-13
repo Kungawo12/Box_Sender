@@ -1,4 +1,4 @@
-console.log('🚀 log.js is loading...');
+console.log('log.js is loading...');
 
 // Wait for DOM to be ready before attaching form handler
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         
         const box = document.getElementById('logResult');
-        const msg = `✅ Package logged successfully!<br>
+        const msg = ` Package logged successfully!<br>
                      <strong>Tracking:</strong> ${trackingNumber}<br>
                      <strong>Status:</strong> ${data?.status || 'received'}<br>
                      <strong>Recipient:</strong> ${recipientFirst} ${recipientLast}`;

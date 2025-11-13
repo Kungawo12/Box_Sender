@@ -1,19 +1,23 @@
 package com.boxsender.packages;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface PackageRepository extends JpaRepository<Package, Long> {
     
+    // Generates: SELECT * FROM packages WHERE tracking_number = ?
     Optional<Package> findByTrackingNumber(String trackingNumber);
     
-    // Advanced search
+    /**
+     * Advanced search with multiple filters
+     * Uses JPQL (Java Persistence Query Language)
+     */
     @Query("SELECT p FROM Package p WHERE " +
            "(:tracking IS NULL OR :tracking = '' OR LOWER(p.trackingNumber) LIKE LOWER(CONCAT('%', :tracking, '%'))) " +
            "AND " +

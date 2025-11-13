@@ -1,7 +1,7 @@
 
 html,body{height:100%}
 .navbar{
-  background: linear-gradient(180deg, rgba(10,15,30,.95), rgba(10,15,30,.85)) !important;
+  background: linear-gradient(180deg) !important;
   border-bottom: 1px solid rgba(9, 9, 9, 0);
   backdrop-filter: blur(8px);
 }
@@ -73,8 +73,8 @@ html,body{height:100%}
 footer { color:var(--muted); }
 a, .nav-link{ color:#cfe1ff }
 a:hover{ color:#ffffff }
-.form-control, .form-select{
-  background-color:#0f1730; color:var(--text);
-  border:1px solid rgba(255,255,255,.15);
+.form-control, .form-select{ 
+  color:var(--text);
+  border:1px solid black;
 }
 .form-control::placeholder{ color:#7c86a9 }

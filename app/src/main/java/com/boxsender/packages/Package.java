@@ -15,12 +15,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-@Entity
+@Entity             //database table
 @Table(name = "packages")
 public class Package {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id         //Primary key
+    @GeneratedValue(strategy = GenerationType.IDENTITY)     //Auto-increment
     private Long id;
 
     @Column(name = "tracking_number", nullable = false, unique = true)
@@ -33,12 +33,14 @@ public class Package {
     private String description;
 
     @Column(length = 20)
-    private String status = "received"; // "received" or "picked_up"
+    private String status = "received"; // "received" or "picked_up" (Default value)
 
+    // Relationship: Many packages → One recipient
     @ManyToOne
     @JoinColumn(name = "recipient_id", nullable = false)
     private Recipient recipient;
 
+    // Relationship: Many packages → One employee (who logged it)
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
@@ -49,7 +51,7 @@ public class Package {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // 🆕 Pickup fields (NO pickup_code!)
+    // Pickup fields
     @Column(name = "picked_up_at")
     private LocalDateTime pickedUpAt;
 
@@ -67,9 +69,10 @@ public class Package {
         this.status = "received";
     }
 
+    // Constructor with parameters
     public Package(String trackingNumber, String carrier, String description, 
-                   Recipient recipient, Employee employee) {
-        this();
+                Recipient recipient, Employee employee) {
+        this();     // Call default constructor first
         this.trackingNumber = trackingNumber;
         this.carrier = carrier;
         this.description = description;
@@ -77,7 +80,11 @@ public class Package {
         this.employee = employee;
     }
 
-    // 🆕 Mark as picked up with signature
+    /**
+     * Mark package as picked up
+     * @param pickedUpBy - Name of person who picked it up
+     * @param signature - Their signature
+     */
     public void markAsPickedUp(String pickedUpBy, String signature) {
         this.status = "picked_up";
         this.pickedUpAt = LocalDateTime.now();

@@ -27,7 +27,7 @@ public class AuthController {
     private final EmployeeRepository employeeRepo;
 
     public AuthController(AuthenticationManager authenticationManager,
-                         EmployeeRepository employeeRepo) {
+                        EmployeeRepository employeeRepo) {
         this.authenticationManager = authenticationManager;
         this.employeeRepo = employeeRepo;
     }
@@ -35,17 +35,26 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
+            // STEP 1: Create authentication token with credentials
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+                new UsernamePasswordAuthenticationToken(
+                    request.email(),// username 
+                    request.password())  // password (plain text)
             );
 
+            // STEP 2: Store authentication in SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            HttpSession session = httpRequest.getSession(true);
-            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
+            // STEP 3: Save SecurityContext to session
+            HttpSession session = httpRequest.getSession(true);
+            session.setAttribute("SPRING_SECURITY_CONTEXT", 
+                                SecurityContextHolder.getContext());
+
+            // STEP 4: Load employee details
             Employee employee = employeeRepo.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+            // STEP 5: Return success response
             return ResponseEntity.ok(Map.of(
                 "message", "Login successful",
                 "firstName", employee.getFirstName(),
@@ -53,19 +62,24 @@ public class AuthController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+            // Authentication failed
+            return ResponseEntity.status(401)
+            .body(Map.of("error", "Invalid credentials"));
         }
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication auth) {
+        // Check if user is authenticated
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
         }
 
+        // Get email from Authentication object
         Employee employee = employeeRepo.findByEmail(auth.getName())
             .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+        // Return user info
         return ResponseEntity.ok(Map.of(
             "firstName", employee.getFirstName(),
             "lastName", employee.getLastName(),

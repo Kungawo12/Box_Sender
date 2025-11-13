@@ -33,6 +33,7 @@ public class PackageController {
     private final EmployeeRepository employeeRepo;
     private final EmailService emailService;
 
+    // Constructor injection
     public PackageController(PackageRepository packageRepo, 
                             RecipientRepository recipientRepo,
                             EmployeeRepository employeeRepo,
@@ -44,11 +45,14 @@ public class PackageController {
     }
 
     /**
-     * POST /api/packages - Log a new package when it's received
+     * POST /api/packages 
+     *  Log a new package when it's received
      */
     @PostMapping
-    public ResponseEntity<?> logPackage(@Valid @RequestBody LogPackageRequest body, 
-                                        Authentication auth) {
+    public ResponseEntity<?> logPackage(
+        @Valid @RequestBody LogPackageRequest body,     // Request body
+        Authentication auth      // Current logged-in user
+        ) {
         try {
             // Get the currently logged-in employee
             Employee employee = employeeRepo.findByEmail(auth.getName())

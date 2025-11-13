@@ -30,43 +30,60 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(EmployeeRepository employeeRepo) {
         return email -> {
+             // 1. Find employee in database by email
             Employee employee = employeeRepo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
             
+            // 2. Convert Employee to Spring Security's User object
             return User.builder()
-                .username(employee.getEmail())
-                .password(employee.getPasswordHash())
-                .roles("USER")
+                .username(employee.getEmail())                  // Username for Spring Security
+                .password(employee.getPasswordHash())           // Hashed password
+                .roles("USER")                        // User role/permission
                 .build();
         };
     }
 
     @Bean
     @SuppressWarnings("deprecation")
-    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService,
-                                                    PasswordEncoder passwordEncoder) {
+    public AuthenticationManager authenticationManager(
+        UserDetailsService userDetailsService,
+        PasswordEncoder passwordEncoder) 
+        {
+        // Create authentication provider
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(userDetailsService);     // How to load users
+        provider.setPasswordEncoder(passwordEncoder);           // How to verify passwords
+
+
         return new ProviderManager(provider);
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // DISABLE CSRF for REST API
             .csrf(csrf -> csrf.disable())
+
+            // CONFIGURE URL ACCESS RULES
             .authorizeHttpRequests(auth -> auth
+                // These URLs are public (no login needed)
                 .requestMatchers("/", "/index.html", "/assets/**", "/api/auth/login").permitAll()
+                // Everything else requires authentication
                 .anyRequest().authenticated()
             )
+
+            // SESSION MANAGEMENT
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
+            // FORM LOGIN CONFIGURATION
             .formLogin(form -> form
-                .loginPage("/index.html")
-                .defaultSuccessUrl("/dashboard.html", true)
+                .loginPage("/index.html")                       // Custom login page
+                .defaultSuccessUrl("/dashboard.html", true)        //Redirect after login
                 .permitAll()
             )
+
+            // LOGOUT CONFIGURATION
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/index.html")
