@@ -36,8 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = ` Package logged successfully!<br>
                      <strong>Tracking:</strong> ${trackingNumber}<br>
                      <strong>Status:</strong> ${data?.status || 'received'}<br>
-                     <strong>Recipient:</strong> ${recipientFirst} ${recipientLast}`;
-        
+                     <strong>Recipient:</strong> ${recipientFirst} ${recipientLast}<br>
+                     <strong>Email:</strong> ${recipientEmail}`;
+
         if (box) {
             box.innerHTML = `<div class="alert alert-success">${msg}</div>`; 
         } else {
