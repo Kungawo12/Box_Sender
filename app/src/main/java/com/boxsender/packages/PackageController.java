@@ -1,10 +1,6 @@
 package com.boxsender.packages;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -15,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 
 import com.boxsender.email.EmailService;
 import com.boxsender.recipients.Recipient;
@@ -24,10 +22,11 @@ import com.boxsender.users.EmployeeRepository;
 
 import jakarta.validation.Valid;
 
-@RestController
-@RequestMapping("/api/packages")
+@RestController     //REST API controller
+@RequestMapping("/api/packages")        // Base URL: /api/packages
 public class PackageController {
 
+    // Dependencies (injected by Spring)
     private final PackageRepository packageRepo;
     private final RecipientRepository recipientRepo;
     private final EmployeeRepository employeeRepo;
@@ -47,7 +46,9 @@ public class PackageController {
     /**
      * POST /api/packages 
      *  Log a new package when it's received
+     * Body: { trackingNumber, carrier, description, recipientFirst, recipientLast, recipientEmail }
      */
+    @PreAuthorize("hasRole('MAILROOM_STAFF')")
     @PostMapping
     public ResponseEntity<?> logPackage(
         @Valid @RequestBody LogPackageRequest body,     // Request body
@@ -80,7 +81,7 @@ public class PackageController {
                     return recipientRepo.save(newRecipient);
                 });
 
-            // Create and save the package
+            // Create the package
             Package pkg = new Package(
                 body.trackingNumber(),
                 body.carrier(),
@@ -89,6 +90,7 @@ public class PackageController {
                 employee
             );
 
+            // Save to database
             Package savedPackage = packageRepo.save(pkg);
 
             // Send email notification to recipient
@@ -119,15 +121,17 @@ public class PackageController {
     }
 
     /**
-     *  GET /api/packages/search - Search packages with filters
+     *  Search packages
+     * GET /api/packages/search?tracking=ABC&recipientName=John&status=received
      */
+    @PreAuthorize("hasAnyRole('MAILROOM_STAFF', 'EMPLOYEE')")
     @GetMapping("/search")
     public ResponseEntity<List<Map<String, Object>>> searchPackages(
         @RequestParam(value = "tracking", required = false, defaultValue = "") String tracking,
         @RequestParam(value = "recipientName", required = false, defaultValue = "") String recipientName,
         @RequestParam(value = "status", required = false, defaultValue = "all") String status
     ) {
-        // Use advanced search
+        // call repository method
         List<Package> packages = packageRepo.advancedSearch(
             tracking.isEmpty() ? null : tracking,
             recipientName.isEmpty() ? null : recipientName,
@@ -160,6 +164,7 @@ public class PackageController {
  *  POST /api/packages/pickup - Mark package as picked up
  * Body: { "trackingNumber": "ABC123", "pickedUpBy": "John Doe", "signature": "John Doe" }
  */
+@PreAuthorize("hasRole('MAILROOM_STAFF')")
 @PostMapping("/pickup")
 public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
     String trackingNumber = body.get("trackingNumber");
@@ -215,6 +220,7 @@ public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
     /**
      *  GET /api/activity - Get recent package activity
      */
+    @PreAuthorize("hasAnyRole('MAILROOM_STAFF', 'EMPLOYEE')")
     @GetMapping("/activity")
     public ResponseEntity<List<Map<String, Object>>> getRecentActivity(
         @RequestParam(value = "limit", required = false, defaultValue = "100") int limit
@@ -230,7 +236,7 @@ public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
             packages = packages.subList(0, limit);
         }
         
-        // Convert to activity events
+        // Build activity events
         List<Map<String, Object>> activities = new ArrayList<>();
         
         for (Package pkg : packages) {
@@ -239,7 +245,10 @@ public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
             receivedEvent.put("action", "RECEIVED");
             receivedEvent.put("when", pkg.getCreatedAt().toString());
             receivedEvent.put("trackingNumber", pkg.getTrackingNumber());
-            receivedEvent.put("recipient", pkg.getRecipient().getFirstName() + " " + pkg.getRecipient().getLastName());
+            receivedEvent.put("recipient", 
+                pkg.getRecipient().getFirstName() + " " + 
+                pkg.getRecipient().getLastName());
+            
             String receivedDetails = "Carrier: " + pkg.getCarrier();
             if (pkg.getDescription() != null && !pkg.getDescription().isEmpty()) {
                 receivedDetails += " - " + pkg.getDescription();
@@ -262,6 +271,18 @@ public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
                 pickedUpEvent.put("details", pickupDetails);
             }
         }
+        //@GetMapping("/api/packages/stats")
+    // public ResponseEntity<?> getStats() {
+    //     long totalPackages = packageRepo.count();
+    //     long receivedPackages = packageRepo.countByStatus("received");
+    //     long pickedUpPackages = packageRepo.countByStatus("picked_up");
+    
+    //     return ResponseEntity.ok(Map.of(
+    //         "total", totalPackages,
+    //         "received", receivedPackages,
+    //         "pickedUp", pickedUpPackages
+    //     ));
+// }
         
         // Sort all activities by timestamp (newest first)
         activities.sort((a, b) -> {
@@ -278,7 +299,7 @@ public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
         return ResponseEntity.ok(activities);
     }
     /**
-     * DTO for logging packages
+     * DTO for logging packages for request body
      */
     public record LogPackageRequest(
         String trackingNumber,

@@ -8,6 +8,7 @@
   <link href="/assets/Css/style.css" rel="stylesheet">
 </head>
 <body>
+  <!-- Navigation -->
   <nav class="navbar bg-primary" data-bs-theme="dark">
     <div class="container d-flex align-items-center">
       <a class="navbar-brand" href="/dashboard.html"> Box Sender</a>
@@ -21,6 +22,7 @@
     </div>
   </nav>
 
+  <!-- Main Content -->
   <main class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-6">
@@ -28,7 +30,9 @@
           <div class="card-body p-4">
             <h3 class="card-title mb-4">Package Pickup</h3>
 
+          <!-- Pickup Form -->
             <form id="pickupForm">
+              <!-- Tracking Number (Read-only, pre-filled) -->
               <div class="mb-3">
                 <label class="form-label" for="trackingNumber">
                   Tracking Number *
@@ -43,6 +47,7 @@
                 />
               </div>
               
+              <!-- Recipient Name (Read-only, pre-filled) -->
               <div class="mb-3">
                 <label class="form-label" for="pickedUpBy">
                    Your Full Name *
@@ -57,6 +62,7 @@
                 />
               </div>
               
+              <!-- Signature (User must type) -->
               <div class="mb-3">
                 <label class="form-label" for="signature">
                   Signature (Type your name) *
@@ -74,7 +80,7 @@
                   By typing your name, you confirm receipt of this package
                 </small>
               </div>
-              
+              <!-- Submit Button -->
               <div class="d-grid gap-2"></div>
               <button class="btn btn-success w-100 btn-lg" type="submit">
                 Confirm Pickup
