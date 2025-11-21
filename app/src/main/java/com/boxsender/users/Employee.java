@@ -7,14 +7,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity
-@Table(name = "employees")
+@Entity         // JPA annotation: This class maps to a database table
+@Table(name = "employees")  // Table name in database
 public class Employee {
 
+    // Primary key (auto-increment)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Columns
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 
@@ -26,6 +28,9 @@ public class Employee {
 
     @Column(name = "password_hash", nullable = false, length = 225)
     private String passwordHash;
+
+    @Column(name= "role", nullable=false, length = 100)
+    private String role;
 
     // --- getters & setters ---
 
@@ -62,5 +67,12 @@ public class Employee {
     }
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public String getRole(){
+        return role;
+    }
+    public void setRole(String role){
+        this.role = role;
     }
 }

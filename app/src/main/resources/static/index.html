@@ -13,6 +13,8 @@
 
 <body class="page-bg bg-cover bg-center bg-no-repeat bg-fixed full-viewport">
   <nav class="navbar navbar-dark bg-dark">
+  
+    <!-- Login Container -->
     <div class="container">
       <a class="navbar-brand fw-bold" href="#">Box Sender Company</a>
       <button class="btn btn-outline-light ms-auto" type="button"
@@ -30,35 +32,71 @@
 
 
   <section class="container my-4">
+    <!-- This starts hidden, revealed by clicking "Sign in" button -->
     <div id="authPanel" class="collapse">
       <div class="card signin-card grow-on-show shadow-lg">
         <div class="card-body p-4">
+          <!-- SIGN IN VIEW -->
           <div id="view-signin">
             <h5 class="mb-3">Sign In</h5>
-            <form id="loginForm" class="needs-validation" novalidate method="post" action="/login">
+            <form id="loginForm" class="needs-validation" novalidate 
+            method="post" action="/login">
+            <!-- Email field -->
               <div class="mb-3">
                 <label for="loginEmail" class="form-label">Email</label>
-                <input id="loginEmail" name="email" type="email" class="form-control"
-                      required>
-                <div class="invalid-feedback">Please enter a valid email.</div>
+                <input 
+                id="loginEmail" 
+                name="email"        
+                type="email" 
+                class="form-control"
+                required
+                >
+                <div class="invalid-feedback">
+                  Please enter a valid email.
+                </div>
               </div>
+              <!-- Password field -->
               <div class="mb-3">
                 <label for="loginPassword" class="form-label">Password</label>
-                <input id="loginPassword" name="password" type="password" class="form-control"
-                      minlength="6" required>
-                <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                <input 
+                id="loginPassword" 
+                name="password"           
+                type="password" 
+                class="form-control"
+                minlength="6" 
+                required
+                >
+                <div class="invalid-feedback">
+                  Password must be at least 6 characters.
+                </div>
               </div>
+              <div class="mb-3">
+                <label for="loginRole" class="form-label">Role</label>
+                <select id="loginRole" name="role" class="form-select" required>
+                  <option value="" disabled selected>Select your role</option>
+                  <option value="MAILROOM_STAFF">Mailroom Employee</option>
+                  <option value="EMPLOYEE">Employee</option>
+                </select>
+                <div class="invalid-feedback">Please select your role.</div>
+              </div>
+              <!-- Submit button -->
               <button class="btn btn-primary w-100" type="submit">Sign In</button>
             </form>
 
+            <!-- Link to switch to register view -->
             <p class="small text-dark mt-3 mb-0">
-              New here? <a href="#" id="linkToRegister" class ="text-dark ">Create an account</a>
+              New here? 
+              <a href="#" id="linkToRegister" class ="text-dark ">
+                Create an account
+              </a>
             </p>
           </div>
 
+          <!-- REGISTER VIEW-->
           <div id="view-register" class="d-none">
             <h5 class="mb-3">Create Account</h5>
             <form id="registerForm" class="needs-validation" novalidate>
+              <!-- Name fields (side by side) -->
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="firstName" class="form-label">First name</label>
@@ -71,14 +109,14 @@
                   <div class="invalid-feedback">Last name is required.</div>
                 </div>
               </div>
-
+              <!-- Email field -->
               <div class="mb-3 mt-3">
                 <label for="regEmail" class="form-label">Email</label>
                 <input id="regEmail" name="email" type="email" class="form-control"
                         placeholder="you@company.com" required>
                 <div class="invalid-feedback">Please enter a valid email.</div>
               </div>
-
+              <!-- Password fields (side by side) -->
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="regPassword" class="form-label">Password</label>
@@ -93,10 +131,21 @@
                   <div class="invalid-feedback">Passwords must match.</div>
                 </div>
               </div>
-
+              <div class="mb-3">
+                <label for="regRole" class="form-label">Role</label>
+                <select id="regRole" name="role" class="form-select" required>
+                  <option value="" disabled selected>Select your role</option>
+                  <option value="MAILROOM_STAFF">Mailroom Employee</option>
+                  <option value="EMPLOYEE">Employee</option>
+                </select>
+                <div class="invalid-feedback">Please select your role.</div>
+              </div>
+          
+              <!-- Submit button -->
               <button class="btn btn-primary w-100 mt-3" type="submit">Create Account</button>
             </form>
-
+            
+            <!-- Link to switch back to sign in -->
             <p class="small text-muted mt-3 mb-0">
               Already have an account? <a href="#" id="linkToSignin" class="text-dark">Back to Sign In</a>
             </p>

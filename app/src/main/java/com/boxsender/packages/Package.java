@@ -45,13 +45,14 @@ public class Package {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    // Timestamps
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Pickup fields
+    // Pickup information
     @Column(name = "picked_up_at")
     private LocalDateTime pickedUpAt;
 
@@ -84,6 +85,7 @@ public class Package {
      * Mark package as picked up
      * @param pickedUpBy - Name of person who picked it up
      * @param signature - Their signature
+     * This is not just a setter - it updates multiple fields!
      */
     public void markAsPickedUp(String pickedUpBy, String signature) {
         this.status = "picked_up";
@@ -131,6 +133,10 @@ public class Package {
     public String getSignature() { return signature; }
     public void setSignature(String signature) { this.signature = signature; }
 
+
+    /**
+     * Lifecycle callback: Called before updating database
+     */
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();

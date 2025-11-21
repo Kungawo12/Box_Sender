@@ -1,11 +1,15 @@
 // Search button click
 document.getElementById('searchBtn').addEventListener('click', searchPackages);
+// When user clicks "Search Packages" button → call searchPackages()
+
 
 // Clear button click
 document.getElementById('clearBtn').addEventListener('click', () => {
+    // Clear all filter inputs
     document.getElementById('trackingFilter').value = '';
     document.getElementById('recipientFilter').value = '';
     document.getElementById('statusFilter').value = 'all';
+    // Clear results table
     document.getElementById('resultsBody').innerHTML = `
         <tr>
             <td colspan="6" class="text-center text-muted py-4">

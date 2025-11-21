@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,67 +27,132 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final EmployeeRepository employeeRepo;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AuthenticationManager authenticationManager,
-                        EmployeeRepository employeeRepo) {
+    public AuthController(
+        AuthenticationManager authenticationManager,
+        EmployeeRepository employeeRepo,
+        PasswordEncoder passwordEncoder
+    ) {
         this.authenticationManager = authenticationManager;
         this.employeeRepo = employeeRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
-            // STEP 1: Create authentication token with credentials
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                    request.email(),// username 
-                    request.password())  // password (plain text)
+                    request.email(),
+                    request.password()
+                )
             );
 
-            // STEP 2: Store authentication in SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // STEP 3: Save SecurityContext to session
             HttpSession session = httpRequest.getSession(true);
             session.setAttribute("SPRING_SECURITY_CONTEXT", 
                                 SecurityContextHolder.getContext());
 
-            // STEP 4: Load employee details
             Employee employee = employeeRepo.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-            // STEP 5: Return success response
+            // Return role in response
             return ResponseEntity.ok(Map.of(
                 "message", "Login successful",
                 "firstName", employee.getFirstName(),
-                "email", employee.getEmail()
+                "email", employee.getEmail(),
+                "role", employee.getRole() != null ? employee.getRole() : "EMPLOYEE"
             ));
 
         } catch (Exception e) {
-            // Authentication failed
             return ResponseEntity.status(401)
-            .body(Map.of("error", "Invalid credentials"));
+                .body(Map.of("error", "Invalid credentials"));
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            // Validation
+            if (request.email() == null || request.email().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
+            }
+            if (request.password() == null || request.password().length() < 6) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Password must be at least 6 characters"));
+            }
+            if (request.firstName() == null || request.firstName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "First name is required"));
+            }
+            if (request.lastName() == null || request.lastName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Last name is required"));
+            }
+
+            // Validate role
+            String role = request.role();
+            if (role == null || (!role.equals("EMPLOYEE") && !role.equals("MAILROOM_STAFF"))) {
+                role = "EMPLOYEE";
+            }
+
+            // Check if email exists
+            if (employeeRepo.findByEmail(request.email()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
+            }
+
+            // Create employee
+            Employee employee = new Employee();
+            employee.setFirstName(request.firstName().trim());
+            employee.setLastName(request.lastName().trim());
+            employee.setEmail(request.email().trim().toLowerCase());
+            employee.setPasswordHash(passwordEncoder.encode(request.password()));
+            employee.setRole(role);
+
+            employeeRepo.save(employee);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Registration successful",
+                "role", role
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication auth) {
-        // Check if user is authenticated
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
         }
 
-        // Get email from Authentication object
         Employee employee = employeeRepo.findByEmail(auth.getName())
             .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        // Return user info
+        // Get role from authorities
+        String role = auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .findFirst()
+            .orElse("ROLE_EMPLOYEE")
+            .replace("ROLE_", "");
+
         return ResponseEntity.ok(Map.of(
             "firstName", employee.getFirstName(),
             "lastName", employee.getLastName(),
-            "email", employee.getEmail()
+            "email", employee.getEmail(),
+            "role", role
         ));
     }
 
+    // Request DTOs
     public record LoginRequest(String email, String password) {}
+    
+    public record RegisterRequest(
+        String role,
+        String firstName, 
+        String lastName, 
+        String email, 
+        String password
+    ) {}
 }

@@ -7,28 +7,34 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.internet.MimeMessage;
 
-@Service
+@Service            // service component
 public class EmailService {
 
     private final JavaMailSender mailSender;
     
+    // Inject configuration from application.properties
     @Value("${brevo.from.email}")
     private String fromEmail;  // 
 
+    // Spring Boot auto-configures JavaMailSender
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
+    /**
+     * Send package arrival notification to recipient
+     */
     public void sendPackageNotification(String recipientEmail, String recipientName,
                                     String trackingNumber) {
         try {
+            //create email message
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            // Use Brevo SMTP email as sender (VERIFIED)
+            //Set email headers
             helper.setFrom(fromEmail, "Box Sender Mailroom");
             helper.setTo(recipientEmail);
-            helper.setSubject("Your Package Has Arrived!");
+            helper.setSubject("Your Package Has Arrived!" + trackingNumber);
             
             String htmlContent = buildEmailTemplate(recipientName, trackingNumber);
             helper.setText(htmlContent, true);
@@ -42,6 +48,7 @@ public class EmailService {
         }
     }
 
+    //Build HTMl email body
     private String buildEmailTemplate(String name, String tracking) {
         String escapedName = escapeHtml(name);
         String escapedTracking = escapeHtml(tracking);

@@ -6,17 +6,20 @@ html,body{height:100%}
   backdrop-filter: blur(8px);
 }
 .card{
-
   color: var(--text);
 }
-.card .form-label{ color: var(--muted); }
+.card .form-label{ 
+  color: var(--muted); 
+}
 
 .table thead th{
   color:#c9d3ff;
   border-bottom-color: rgba(255,255,255,.12);
   position: sticky; top: 0; background: #0e1833;
 }
-.table td{ border-color: rgba(255,255,255,.08); }
+.table td{ 
+  border-color: rgba(255,255,255,.08); 
+}
 .badge-logged{
   color: #a7c7ff;
   border: 1px solid rgba(106,169,255,.35);
@@ -78,3 +81,20 @@ a:hover{ color:#ffffff }
   border:1px solid black;
 }
 .form-control::placeholder{ color:#7c86a9 }
+
+.activity-card { 
+  transition: transform 0.2s; 
+}
+.activity-card:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+}
+.table-responsive { 
+  max-height: 600px; 
+  overflow-y: auto; 
+}
+.table thead { 
+  position: sticky; 
+  top: 0; 
+  z-index: 10; 
+}
