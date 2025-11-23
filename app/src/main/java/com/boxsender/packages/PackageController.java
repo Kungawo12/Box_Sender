@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -125,40 +126,39 @@ public class PackageController {
      * GET /api/packages/search?tracking=ABC&recipientName=John&status=received
      */
     @PreAuthorize("hasAnyRole('MAILROOM_STAFF', 'EMPLOYEE')")
-    @GetMapping("/search")
-    public ResponseEntity<List<Map<String, Object>>> searchPackages(
-        @RequestParam(value = "tracking", required = false, defaultValue = "") String tracking,
-        @RequestParam(value = "recipientName", required = false, defaultValue = "") String recipientName,
-        @RequestParam(value = "status", required = false, defaultValue = "all") String status
-    ) {
-        // call repository method
-        List<Package> packages = packageRepo.advancedSearch(
-            tracking.isEmpty() ? null : tracking,
-            recipientName.isEmpty() ? null : recipientName,
-            status
-        );
+@GetMapping("/search")
+public ResponseEntity<?> searchPackages(
+    @RequestParam(required = false) String tracking,
+    @RequestParam(required = false) String recipient,
+    @RequestParam(required = false, defaultValue = "all") String status
+) {
+    try {
+        List<Package> packages = packageRepo.advancedSearch(tracking, recipient, status);
 
-        // Convert to JSON format
-        List<Map<String, Object>> response = packages.stream()
+        List<Map<String, Object>> results = packages.stream()
             .map(pkg -> {
                 Map<String, Object> map = new HashMap<>();
-                map.put("id", pkg.getId());
+                map.put("id", pkg.getId());  // ADD THIS
                 map.put("trackingNumber", pkg.getTrackingNumber());
                 map.put("carrier", pkg.getCarrier());
-                map.put("description", pkg.getDescription());
+                map.put("description", pkg.getDescription() != null ? pkg.getDescription() : "");
                 map.put("recipientName", pkg.getRecipient().getFirstName() + " " + pkg.getRecipient().getLastName());
                 map.put("recipientEmail", pkg.getRecipient().getEmail());
                 map.put("status", pkg.getStatus());
                 map.put("createdAt", pkg.getCreatedAt().toString());
                 map.put("pickedUpAt", pkg.getPickedUpAt() != null ? pkg.getPickedUpAt().toString() : null);
-                map.put("pickedUpBy", pkg.getPickedUpBy());
-                map.put("signature", pkg.getSignature());
+                map.put("pickedUpBy", pkg.getPickedUpBy() != null ? pkg.getPickedUpBy() : "");
                 return map;
             })
             .collect(Collectors.toList());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(results);
+
+    } catch (Exception e) {
+        return ResponseEntity.badRequest()
+            .body(Map.of("error", "Search failed: " + e.getMessage()));
     }
+}
 
     /**
  *  POST /api/packages/pickup - Mark package as picked up
@@ -298,6 +298,60 @@ public ResponseEntity<?> pickupPackage(@RequestBody Map<String, String> body) {
         
         return ResponseEntity.ok(activities);
     }
+
+    /**
+     * Get single package by ID - for viewing details
+     * Both mailroom staff and employees can view
+     */
+    @PreAuthorize("hasAnyRole('MAILROOM_STAFF', 'EMPLOYEE')")
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPackageById(@PathVariable Long id) {
+        try {
+            // Find package by ID
+            Package pkg = packageRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Package not found with ID: " + id));
+        
+        // Get employee who logged the package
+            String loggedBy = "Unknown";
+            if (pkg.getEmployee() != null) {
+                Employee employee = pkg.getEmployee();
+                loggedBy = employee.getFirstName() + " " + employee.getLastName();
+        }
+        
+        // Get recipient info
+            Recipient recipient = pkg.getRecipient();
+            String recipientName = recipient.getFirstName() + " " + recipient.getLastName();
+        
+        // Build response map
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", pkg.getId());
+            response.put("trackingNumber", pkg.getTrackingNumber());
+            response.put("carrier", pkg.getCarrier());
+            response.put("description", pkg.getDescription() != null ? pkg.getDescription() : "No description provided");
+            response.put("status", pkg.getStatus());
+            response.put("recipientName", recipientName);
+            response.put("recipientEmail", recipient.getEmail());
+            response.put("createdAt", pkg.getCreatedAt().toString());
+            response.put("loggedBy", loggedBy);
+        
+        // Add pickup information if picked up
+            if ("picked_up".equals(pkg.getStatus())) {
+                response.put("pickedUpAt", pkg.getPickedUpAt() != null ? pkg.getPickedUpAt().toString() : null);
+                response.put("pickedUpBy", pkg.getPickedUpBy() != null ? pkg.getPickedUpBy() : "Unknown");
+                response.put("signature", pkg.getSignature() != null ? pkg.getSignature() : "No signature");
+            } else {
+                response.put("pickedUpAt", null);
+                response.put("pickedUpBy", null);
+                response.put("signature", null);
+        }
+        
+            return ResponseEntity.ok(response);
+        
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Failed to get package details: " + e.getMessage()));
+    }
+}
     /**
      * DTO for logging packages for request body
      */
