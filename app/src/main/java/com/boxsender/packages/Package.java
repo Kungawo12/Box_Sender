@@ -7,6 +7,7 @@ import com.boxsender.users.Employee;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,12 +37,12 @@ public class Package {
     private String status = "received"; // "received" or "picked_up" (Default value)
 
     // Relationship: Many packages → One recipient
-    @ManyToOne
+    @ManyToOne(fetch= FetchType.EAGER)
     @JoinColumn(name = "recipient_id", nullable = false)
     private Recipient recipient;
 
     // Relationship: Many packages → One employee (who logged it)
-    @ManyToOne
+    @ManyToOne(fetch= FetchType.EAGER)
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
