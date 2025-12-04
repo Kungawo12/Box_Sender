@@ -101,6 +101,8 @@
 
 package com.boxsender.config;
 
+import java.util.Collections;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -120,8 +122,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.boxsender.users.Employee;
 import com.boxsender.users.EmployeeRepository;
-
-import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -183,7 +183,7 @@ public class SecurityConfig {
                 ).permitAll()
                 
                 // MAILROOM STAFF ONLY
-                .requestMatchers("/log.html", "/pickup.html").hasRole("MAILROOM_STAFF")
+                .requestMatchers("/log.html", "/pickup.html", "/reports.html").hasRole("MAILROOM_STAFF")
                 
                 // BOTH ROLES
                 .requestMatchers("/dashboard.html", "/search.html").hasAnyRole("MAILROOM_STAFF", "EMPLOYEE")

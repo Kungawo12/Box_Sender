@@ -86,33 +86,37 @@
             }
         }
 
-        // Show/hide quick action cards based on role
-        const quickActionsSection = document.querySelector('.row.g-3');
-        if (quickActionsSection && role === 'EMPLOYEE') {
-            // Hide Log Package and Pickup cards for regular employees
+        // For employees: hide Log Package, Pickup, and Reports cards
+        if (role === 'EMPLOYEE') {
+            const quickActionsSection = document.querySelector('.row.g-3');
+            if (!quickActionsSection) return;
+
             const cards = quickActionsSection.querySelectorAll('.col-md-4');
             cards.forEach((card, index) => {
-                if (index === 0 || index === 1) {
-                    // Hide Log Package (index 0) and Pickup (index 1)
+                // Hide cards: 0=Log, 1=Pickup, 3=Reports (keep 2=Search)
+                if (index === 0 || index === 1 || index === 3) {
                     card.style.display = 'none';
-                } else {
+                } else if (index === 2) {
                     // Make Search card bigger
                     card.classList.remove('col-md-4');
                     card.classList.add('col-md-8', 'mx-auto');
                 }
             });
 
-            // Add info message
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'col-12 mt-3';
-            infoDiv.innerHTML = `
-                <div class="alert alert-info mb-0">
-                    <strong>Employee Access:</strong> You can search for packages. 
-                    Contact mailroom staff to log new packages or process pickups.
-                </div>
-            `;
-            quickActionsSection.appendChild(infoDiv);
+            // Add info message if not already there
+            if (!document.querySelector('.alert-info')) {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'col-12 mt-3';
+                infoDiv.innerHTML = `
+                    <div class="alert alert-info mb-0">
+                        <strong>Employee Access:</strong> You can search for packages. 
+                        Contact mailroom staff to log new packages, process pickups, or generate reports.
+                    </div>
+                `;
+                quickActionsSection.appendChild(infoDiv);
+            }
         }
+        // For mailroom staff: show all cards (do nothing, they're already visible)
     }
 
     // Load user info on page load
