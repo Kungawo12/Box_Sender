@@ -1,147 +1,179 @@
-/**
- * Login Page JavaScript - Updated with Role Support
- */
+(function () {
+  'use strict';
 
-function validateForm(form) {
-  if (!form.checkValidity()) {
-    form.classList.add('was-validated');
-    return false;
-  }
-  return true;
-}
-
-function showView(targetId) {
-  const sign = document.getElementById('view-signin');
-  const reg  = document.getElementById('view-register');
-
-  const show = el => el.classList.remove('d-none');
-  const hide = el => el.classList.add('d-none');
-
-  if (targetId === 'register') {
-    hide(sign);
-    show(reg);
-  } else {
-    hide(reg);
-    show(sign);
-  }
-}
-
-async function apiPost(path, data) {
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(data)
-  });
-
-  // Parse response body
-  const text = await res.text();
-  let responseData = null;
-  try {
-    responseData = text ? JSON.parse(text) : null;
-  } catch {
-    responseData = { error: text };
-  }
-
-  if (!res.ok) {
-    const msg = responseData?.error || 'Request failed';
-    throw new Error(msg);
-  }
+  // DOM Elements
+  const viewSignin = document.getElementById('view-signin');
+  const viewRegister = document.getElementById('view-register');
+  const linkToRegister = document.getElementById('linkToRegister');
+  const linkToSignin = document.getElementById('linkToSignin');
   
-  return responseData;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-
-  // --- VIEW SWITCHING ---
-  document.getElementById('linkToRegister')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showView('register');
-  });
-
-  document.getElementById('linkToSignin')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showView('signin');
-  });
-
-  // --- SIGN IN FORM ---
   const loginForm = document.getElementById('loginForm');
-  loginForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  const registerForm = document.getElementById('registerForm');
+  const loginError = document.getElementById('loginError');
+  const registerError = document.getElementById('registerError');
+  const registerSuccess = document.getElementById('registerSuccess');
 
-    if (!validateForm(loginForm)) return;
+  // Show/hide security key field based on account type
+  const typeEmployee = document.getElementById('typeEmployee');
+  const typeMailroom = document.getElementById('typeMailroom');
+  const securityKeyField = document.getElementById('securityKeyField');
+  const securityKeyInput = document.getElementById('securityKey');
 
-    // Get form values including role
-    const email = loginForm.email.value.trim();
-    const password = loginForm.password.value;
-    const selectedRole = document.getElementById('loginRole').value;
+  if (typeEmployee && typeMailroom) {
+      typeEmployee.addEventListener('change', () => {
+          securityKeyField.classList.add('d-none');
+          securityKeyInput.removeAttribute('required');
+      });
 
-    // Validate role selection
-    if (!selectedRole) {
-      alert('Please select your role.');
-      return;
-    }
+      typeMailroom.addEventListener('change', () => {
+          securityKeyField.classList.remove('d-none');
+          securityKeyInput.setAttribute('required', 'required');
+      });
+  }
 
-    const body = {
-      email: email,
-      password: password
-    };
+  // View Switching
+  if (linkToRegister) {
+      linkToRegister.addEventListener('click', (e) => {
+          e.preventDefault();
+          viewSignin.classList.add('d-none');
+          viewRegister.classList.remove('d-none');
+      });
+  }
 
-    try {
-      // Send login request
-      const data = await apiPost('/api/auth/login', body);
+  if (linkToSignin) {
+      linkToSignin.addEventListener('click', (e) => {
+          e.preventDefault();
+          viewRegister.classList.add('d-none');
+          viewSignin.classList.remove('d-none');
+      });
+  }
 
-      // Check if role matches
-      if (data.role && data.role !== selectedRole) {
-        const roleName = data.role === 'MAILROOM_STAFF' ? 'Mailroom Employee' : 'Employee';
-        alert(`This account is registered as "${roleName}". Please select the correct role.`);
-        return;
+  // API Helper
+  async function api(method, path, body) {
+      const res = await fetch(path, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: body ? JSON.stringify(body) : undefined
+      });
+
+      const text = await res.text();
+      let responseData = null;
+      try {
+          responseData = text ? JSON.parse(text) : null;
+      } catch {
+          responseData = { error: text };
       }
 
-      // Success - redirect to dashboard
-      window.location.replace('/dashboard.html');
-
-    } catch (err) {
-      alert(err.message || 'Invalid email or password');
-    }
-  });
-
-  // --- REGISTRATION FORM ---
-  const regForm = document.getElementById('registerForm');
-  regForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // Password matching
-    const p1 = document.getElementById('regPassword');
-    const p2 = document.getElementById('regPassword2');
-    p2.setCustomValidity(p1.value !== p2.value ? 'Passwords do not match' : '');
-
-    if (!validateForm(regForm)) return;
-
-    // Get role
-    const selectedRole = document.getElementById('regRole').value;
-    if (!selectedRole) {
-      alert('Please select your role.');
-      return;
-    }
-
-    const body = {
-      role: selectedRole,
-      firstName: regForm.firstName.value.trim(),
-      lastName: regForm.lastName.value.trim(),
-      email: regForm.email.value.trim(),
-      password: regForm.password.value
-    };
-
-    try {
-      await apiPost('/api/auth/register', body);
+      if (!res.ok) {
+          const msg = responseData?.error || 'Request failed';
+          throw new Error(msg);
+      }
       
-      alert('Account created successfully! Please sign in.');
-      regForm.reset();
-      showView('signin');
+      return responseData;
+  }
 
-    } catch (err) {
-      alert(err.message || 'Registration failed');
-    }
-  });
-});
+  // LOGIN FORM - No role selection needed
+  if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          if (loginError) loginError.classList.add('d-none');
+
+          try {
+              const email = document.getElementById('loginEmail').value.trim();
+              const password = document.getElementById('loginPassword').value;
+
+              if (!email || !password) {
+                  throw new Error('Please enter email and password');
+              }
+
+              // Call login API (no role needed - backend determines from database)
+              await api('POST', '/api/auth/login', {
+                  email: email,
+                  password: password
+              });
+
+              // Success - redirect to dashboard
+              window.location.replace('/dashboard.html');
+
+          } catch (error) {
+              if (loginError) {
+                  loginError.textContent = error.message || 'Invalid email or password';
+                  loginError.classList.remove('d-none');
+              }
+          }
+      });
+  }
+
+  // REGISTER FORM - With security key validation
+  if (registerForm) {
+      registerForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          if (registerError) registerError.classList.add('d-none');
+          if (registerSuccess) registerSuccess.classList.add('d-none');
+
+          try {
+              // Get form values
+              const accountType = document.querySelector('input[name="accountType"]:checked').value;
+              const securityKey = document.getElementById('securityKey').value;
+              const firstName = document.getElementById('firstName').value.trim();
+              const lastName = document.getElementById('lastName').value.trim();
+              const email = document.getElementById('regEmail').value.trim();
+              const password = document.getElementById('regPassword').value;
+              const password2 = document.getElementById('regPassword2').value;
+
+              // Validation
+              if (!firstName || !lastName) {
+                  throw new Error('Please enter your full name');
+              }
+              if (!email) {
+                  throw new Error('Please enter your email');
+              }
+              if (password.length < 6) {
+                  throw new Error('Password must be at least 6 characters');
+              }
+              if (password !== password2) {
+                  throw new Error('Passwords do not match');
+              }
+
+              // Validate security key for mailroom staff
+              if (accountType === 'MAILROOM_STAFF' && !securityKey) {
+                  throw new Error('Security key is required for mailroom staff registration');
+              }
+
+              // Call register API
+              await api('POST', '/api/auth/register', {
+                  role: accountType,
+                  securityKey: securityKey || null,
+                  firstName: firstName,
+                  lastName: lastName,
+                  email: email,
+                  password: password
+              });
+
+              // Success
+              if (registerSuccess) {
+                  registerSuccess.textContent = 'Account created successfully! You can now sign in.';
+                  registerSuccess.classList.remove('d-none');
+              }
+              registerForm.reset();
+
+              // Switch to login view after 2 seconds
+              setTimeout(() => {
+                  viewRegister.classList.add('d-none');
+                  viewSignin.classList.remove('d-none');
+                  if (registerSuccess) registerSuccess.classList.add('d-none');
+              }, 2000);
+
+          } catch (error) {
+              if (registerError) {
+                  registerError.textContent = error.message || 'Registration failed';
+                  registerError.classList.remove('d-none');
+              }
+          }
+      });
+  }
+
+})();

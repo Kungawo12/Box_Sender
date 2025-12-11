@@ -25,6 +25,9 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    // Security key for mailroom staff registration (store in environment variable in production)
+    private static final String MAILROOM_SECURITY_KEY = "MAILROOM2024";
+
     private final AuthenticationManager authenticationManager;
     private final EmployeeRepository employeeRepo;
     private final PasswordEncoder passwordEncoder;
@@ -39,6 +42,9 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Login - Role is determined from database
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
@@ -58,7 +64,6 @@ public class AuthController {
             Employee employee = employeeRepo.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-            // Return role in response
             return ResponseEntity.ok(Map.of(
                 "message", "Login successful",
                 "firstName", employee.getFirstName(),
@@ -68,10 +73,13 @@ public class AuthController {
 
         } catch (Exception e) {
             return ResponseEntity.status(401)
-                .body(Map.of("error", "Invalid credentials"));
+                .body(Map.of("error", "Invalid email or password"));
         }
     }
 
+    /**
+     * Register - With security key validation for mailroom staff
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
@@ -93,6 +101,19 @@ public class AuthController {
             String role = request.role();
             if (role == null || (!role.equals("EMPLOYEE") && !role.equals("MAILROOM_STAFF"))) {
                 role = "EMPLOYEE";
+            }
+
+            // SECURITY: Validate security key for mailroom staff
+            if (role.equals("MAILROOM_STAFF")) {
+                if (request.securityKey() == null || request.securityKey().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Security key is required for mailroom staff registration"));
+                }
+                
+                if (!MAILROOM_SECURITY_KEY.equals(request.securityKey().trim())) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Invalid security key. Contact your administrator."));
+                }
             }
 
             // Check if email exists
@@ -130,7 +151,6 @@ public class AuthController {
         Employee employee = employeeRepo.findByEmail(auth.getName())
             .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        // Get role from authorities
         String role = auth.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
             .findFirst()
@@ -150,6 +170,7 @@ public class AuthController {
     
     public record RegisterRequest(
         String role,
+        String securityKey,
         String firstName, 
         String lastName, 
         String email, 
